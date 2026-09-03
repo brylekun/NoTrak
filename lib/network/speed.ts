@@ -12,6 +12,29 @@ function finitePositiveValues(values: readonly number[]) {
   return values.filter((value) => Number.isFinite(value) && value > 0);
 }
 
+function percentile(sortedValues: readonly number[], fraction: number) {
+  const position = (sortedValues.length - 1) * fraction;
+  const lowerIndex = Math.floor(position);
+  const upperIndex = Math.ceil(position);
+  const weight = position - lowerIndex;
+
+  return sortedValues[lowerIndex] + (sortedValues[upperIndex] - sortedValues[lowerIndex]) * weight;
+}
+
+export function filterLatencyOutliers(values: readonly number[]) {
+  const samples = finitePositiveValues(values);
+  if (samples.length < 4) return samples;
+
+  const sortedSamples = [...samples].sort((left, right) => left - right);
+  const firstQuartile = percentile(sortedSamples, 0.25);
+  const thirdQuartile = percentile(sortedSamples, 0.75);
+  const margin = Math.max((thirdQuartile - firstQuartile) * 1.5, 1);
+  const lowerBound = firstQuartile - margin;
+  const upperBound = thirdQuartile + margin;
+
+  return samples.filter((sample) => sample >= lowerBound && sample <= upperBound);
+}
+
 export function positiveEstimate(
   estimate: number | undefined,
   samples: readonly number[],

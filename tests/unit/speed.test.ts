@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  filterLatencyOutliers,
   formatMbps,
   formatMilliseconds,
   latencyJitter,
@@ -30,6 +31,11 @@ describe("speed result formatting", () => {
     expect(medianPositiveMeasurement([0, 12], 2)).toBeUndefined();
     expect(latencyJitter([0, 10, 14, 11], 3)).toBe(3.5);
     expect(latencyJitter([0, 10], 2)).toBeUndefined();
+  });
+
+  it("removes browser timing outliers while preserving sample order", () => {
+    expect(filterLatencyOutliers([20, 22, 21, 350, 19, 20, 18])).toEqual([20, 22, 21, 19, 20, 18]);
+    expect(filterLatencyOutliers([0, Number.NaN, 10])).toEqual([10]);
   });
 
   it("labels measurement stages", () => {

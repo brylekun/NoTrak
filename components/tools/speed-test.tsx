@@ -7,6 +7,7 @@ import { Gauge, Pause, Play, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
+  filterLatencyOutliers,
   formatMbps,
   formatMilliseconds,
   latencyJitter,
@@ -42,7 +43,7 @@ async function measureIdleLatency(signal: AbortSignal): Promise<Pick<SpeedSummar
     const url = new URL("https://speed.cloudflare.com/__down");
     url.searchParams.set("bytes", "0");
     url.searchParams.set("no-cache", `${Date.now()}-${index}`);
-    const startedAt = performance.now();
+    const resourceName = url.href;
 
     try {
       const response = await fetch(url, {
@@ -56,15 +57,20 @@ async function measureIdleLatency(signal: AbortSignal): Promise<Pick<SpeedSummar
 
       // The first request establishes the connection and is intentionally not
       // counted as steady-state latency.
-      if (index > 0) samples.push(performance.now() - startedAt);
+      if (index > 0) {
+        const timing = performance.getEntriesByName(resourceName, "resource").at(-1) as PerformanceResourceTiming | undefined;
+        if (timing) samples.push(timing.responseStart - timing.requestStart);
+      }
     } catch (reason) {
       if (signal.aborted) throw reason;
     }
   }
 
+  const filteredSamples = filterLatencyOutliers(samples);
+
   return {
-    latency: medianPositiveMeasurement(samples, minimumIdleLatencySamples),
-    jitter: latencyJitter(samples, minimumIdleLatencySamples),
+    latency: medianPositiveMeasurement(filteredSamples, minimumIdleLatencySamples),
+    jitter: latencyJitter(filteredSamples, minimumIdleLatencySamples),
   };
 }
 
@@ -73,9 +79,9 @@ function normalizeResults(
   idleLatency: Pick<SpeedSummary, "latency" | "jitter">,
 ): SpeedSummary {
   const summary = results.getSummary();
-  const unloadedLatency = results.getUnloadedLatencyPoints();
-  const downloadLoadedLatency = results.getDownLoadedLatencyPoints();
-  const uploadLoadedLatency = results.getUpLoadedLatencyPoints();
+  const unloadedLatency = filterLatencyOutliers(results.getUnloadedLatencyPoints());
+  const downloadLoadedLatency = filterLatencyOutliers(results.getDownLoadedLatencyPoints());
+  const uploadLoadedLatency = filterLatencyOutliers(results.getUpLoadedLatencyPoints());
 
   return {
     download: positiveEstimate(
