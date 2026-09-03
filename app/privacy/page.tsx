@@ -18,7 +18,7 @@ const principles = [
   {
     icon: Server,
     title: "No NoTrak database",
-    body: "NoTrak has no accounts, profiles, saved tool history, or application database. Sensitive tool inputs are not stored in browser storage.",
+    body: "NoTrak has no accounts, profiles, saved tool history, or application database. Sensitive tool inputs are not stored in browser storage. Only your harmless light or dark theme preference is saved locally.",
   },
   {
     icon: Cloud,

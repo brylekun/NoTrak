@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+
 export function SiteHeader() {
   return (
     <header className="border-b border-border/70 bg-background/80 backdrop-blur-xl">
@@ -16,6 +18,7 @@ export function SiteHeader() {
           <Link className="nav-link" href="/#tools">Tools</Link>
           <Link className="nav-link hidden sm:inline-flex" href="/methodology">Methodology</Link>
           <Link className="nav-link" href="/privacy">Privacy</Link>
+          <ThemeToggle />
         </nav>
       </div>
     </header>

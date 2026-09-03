@@ -13,6 +13,24 @@ test("the homepage exposes every released tool", async ({ page }) => {
   }
 });
 
+test("the color theme initializes and persists an override", async ({ page }) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => localStorage.setItem("notrak-theme", "dark"));
+  await page.reload({ waitUntil: "domcontentloaded" });
+
+  await expect(page.locator("html")).toHaveClass(/dark/);
+  const toggle = page.getByRole("button", { name: /theme/i });
+  await expect(toggle).toHaveAccessibleName("Switch to light theme");
+
+  await toggle.click();
+  await expect(page.locator("html")).not.toHaveClass(/dark/);
+  await expect(toggle).toHaveAccessibleName("Switch to dark theme");
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("notrak-theme"))).toBe("light");
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator("html")).not.toHaveClass(/dark/);
+});
+
 for (const tool of readyTools) {
   test(`${tool.name} has a usable release shell`, async ({ page }) => {
     const response = await page.goto(`/tools/${tool.slug}`, { waitUntil: "domcontentloaded" });
