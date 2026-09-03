@@ -8,6 +8,48 @@ export type SpeedSummary = {
   totalDurationMs?: number;
 };
 
+function finitePositiveValues(values: readonly number[]) {
+  return values.filter((value) => Number.isFinite(value) && value > 0);
+}
+
+export function positiveEstimate(
+  estimate: number | undefined,
+  samples: readonly number[],
+  minimumSamples: number,
+) {
+  if (
+    estimate === undefined ||
+    !Number.isFinite(estimate) ||
+    estimate <= 0 ||
+    finitePositiveValues(samples).length < minimumSamples
+  ) {
+    return undefined;
+  }
+
+  return estimate;
+}
+
+export function medianPositiveMeasurement(values: readonly number[], minimumSamples: number) {
+  const samples = finitePositiveValues(values).sort((left, right) => left - right);
+  if (samples.length < minimumSamples) return undefined;
+
+  const middle = Math.floor(samples.length / 2);
+  if (samples.length % 2 === 1) return samples[middle];
+  return (samples[middle - 1] + samples[middle]) / 2;
+}
+
+export function latencyJitter(values: readonly number[], minimumSamples: number) {
+  const samples = finitePositiveValues(values);
+  if (samples.length < minimumSamples) return undefined;
+
+  let totalDifference = 0;
+  for (let index = 1; index < samples.length; index += 1) {
+    totalDifference += Math.abs(samples[index] - samples[index - 1]);
+  }
+
+  return totalDifference / (samples.length - 1);
+}
+
 export function formatMbps(bitsPerSecond?: number) {
   if (bitsPerSecond === undefined || !Number.isFinite(bitsPerSecond)) return "—";
   return (bitsPerSecond / 1_000_000).toFixed(bitsPerSecond >= 100_000_000 ? 0 : 1);

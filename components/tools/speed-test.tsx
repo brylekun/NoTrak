@@ -2,31 +2,62 @@
 
 import { useEffect, useRef, useState } from "react";
 import type SpeedTestEngine from "@cloudflare/speedtest";
-import type { MeasurementSummary } from "@cloudflare/speedtest";
+import type { Results } from "@cloudflare/speedtest";
 import { Gauge, Pause, Play, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { formatMbps, formatMilliseconds, speedTestStage, type SpeedSummary } from "@/lib/network/speed";
+import {
+  formatMbps,
+  formatMilliseconds,
+  latencyJitter,
+  medianPositiveMeasurement,
+  positiveEstimate,
+  speedTestStage,
+  type SpeedSummary,
+} from "@/lib/network/speed";
 
+// Ramp to larger payloads only while earlier requests are too short to
+// characterize the connection. The engine stops later rounds after a request
+// reaches bandwidthFinishRequestDuration.
 const measurements = [
-  { type: "latency" as const, numPackets: 1 },
-  { type: "download" as const, bytes: 100_000, count: 2, bypassMinDuration: true },
-  { type: "latency" as const, numPackets: 10 },
-  { type: "download" as const, bytes: 1_000_000, count: 3 },
+  { type: "latency" as const, numPackets: 2 },
+  { type: "download" as const, bytes: 100_000, count: 1, bypassMinDuration: true },
+  { type: "latency" as const, numPackets: 20 },
+  { type: "download" as const, bytes: 1_000_000, count: 4 },
   { type: "upload" as const, bytes: 100_000, count: 2, bypassMinDuration: true },
-  { type: "download" as const, bytes: 10_000_000, count: 2 },
-  { type: "upload" as const, bytes: 1_000_000, count: 3 },
-  { type: "upload" as const, bytes: 5_000_000, count: 1 },
+  { type: "download" as const, bytes: 10_000_000, count: 3 },
+  { type: "upload" as const, bytes: 1_000_000, count: 4 },
+  { type: "download" as const, bytes: 25_000_000, count: 2 },
+  { type: "upload" as const, bytes: 10_000_000, count: 3 },
+  { type: "download" as const, bytes: 100_000_000, count: 1 },
+  { type: "upload" as const, bytes: 50_000_000, count: 1 },
 ];
 
-function normalizeSummary(summary: MeasurementSummary): SpeedSummary {
+function normalizeResults(results: Results): SpeedSummary {
+  const summary = results.getSummary();
+  const unloadedLatency = results.getUnloadedLatencyPoints();
+  const downloadLoadedLatency = results.getDownLoadedLatencyPoints();
+  const uploadLoadedLatency = results.getUpLoadedLatencyPoints();
+
   return {
-    download: summary.download,
-    upload: summary.upload,
-    latency: summary.latency,
-    jitter: summary.jitter,
-    downLoadedLatency: summary.downLoadedLatency,
-    upLoadedLatency: summary.upLoadedLatency,
+    download: positiveEstimate(
+      summary.download,
+      results.getDownloadBandwidthPoints()
+        .filter((point) => point.duration >= 10)
+        .map((point) => point.bps),
+      3,
+    ),
+    upload: positiveEstimate(
+      summary.upload,
+      results.getUploadBandwidthPoints()
+        .filter((point) => point.duration >= 10)
+        .map((point) => point.bps),
+      3,
+    ),
+    latency: medianPositiveMeasurement(unloadedLatency, 5),
+    jitter: latencyJitter(unloadedLatency, 5),
+    downLoadedLatency: medianPositiveMeasurement(downloadLoadedLatency, 2),
+    upLoadedLatency: medianPositiveMeasurement(uploadLoadedLatency, 2),
     totalDurationMs: summary.totalDurationMs,
   };
 }
@@ -60,6 +91,8 @@ export function SpeedTest() {
         logAimApiUrl: null,
         logMeasurementApiUrl: null,
         includeCredentials: false,
+        loadedLatencyThrottle: 150,
+        loadedRequestMinDuration: 200,
         bandwidthAbortRequestDuration: 10_000,
       });
 
@@ -68,9 +101,9 @@ export function SpeedTest() {
         setProgress(Math.round((measurementId / measurements.length) * 100));
         setStage(speedTestStage(measurement.type));
       };
-      engine.onResultsChange = () => setSummary(normalizeSummary(engine.results.getSummary()));
+      engine.onResultsChange = () => setSummary(normalizeResults(engine.results));
       engine.onFinish = (results) => {
-        setSummary(normalizeSummary(results.getSummary()));
+        setSummary(normalizeResults(results));
         setProgress(100);
         setStage("Test complete");
         setFinished(true);
@@ -121,7 +154,7 @@ export function SpeedTest() {
   return (
     <div>
       <div className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4 text-sm leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950/35 dark:text-amber-200">
-        Starting the test sends measurement traffic directly to Cloudflare, which can see your IP address. No file or typed content is sent. This test uses up to roughly 30 MB download and 9 MB upload; NoTrak disables Cloudflare result logging.
+        Starting the test sends measurement traffic directly to Cloudflare, which can see your IP address. No file or typed content is sent. The adaptive test usually stops early, but can use up to roughly 185 MB download and 85 MB upload on very fast connections. NoTrak disables Cloudflare result logging.
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -152,7 +185,11 @@ export function SpeedTest() {
         {started && <Button className="h-10 px-4" variant="outline" onClick={restart}><RotateCcw /> Restart</Button>}
       </div>
 
-      {finished && summary.totalDurationMs !== undefined && <p className="mt-4 text-sm text-muted-foreground">Completed in {(summary.totalDurationMs / 1000).toFixed(1)} seconds. Results are estimates and can vary with Wi-Fi, browser load, and server conditions.</p>}
+      {finished && summary.totalDurationMs !== undefined && (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Completed in {(summary.totalDurationMs / 1000).toFixed(1)} seconds. An em dash means the browser did not produce enough valid samples. Results are estimates and can vary with Wi-Fi, browser load, and server conditions.
+        </p>
+      )}
       <p className="mt-4 min-h-5 text-sm text-destructive" role="alert" aria-live="polite">{message}</p>
     </div>
   );
