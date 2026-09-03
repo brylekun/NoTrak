@@ -25,18 +25,25 @@ export async function queryGoogleSafeBrowsing(url: string, apiKey: string | unde
   const base: UrlProviderResult = { provider: "Google Safe Browsing", status: "not_configured", threatTypes: [] };
   if (!apiKey) return base;
   try {
-    const endpoint = new URL("https://safebrowsing.googleapis.com/v5/urls:search");
-    endpoint.searchParams.append("urls", url);
-    const response = await fetchWithTimeout(fetcher, endpoint, {
-      method: "GET",
-      headers: { Accept: "application/json", "x-goog-api-key": apiKey },
+    const response = await fetchWithTimeout(fetcher, "https://safebrowsing.googleapis.com/v4/threatMatches:find", {
+      method: "POST",
+      headers: { Accept: "application/json", "Content-Type": "application/json", "x-goog-api-key": apiKey },
+      body: JSON.stringify({
+        client: { clientId: "notrak", clientVersion: "1.1" },
+        threatInfo: {
+          threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+          platformTypes: ["ANY_PLATFORM"],
+          threatEntryTypes: ["URL"],
+          threatEntries: [{ url }],
+        },
+      }),
     });
     if (!response.ok) return { ...base, status: "unavailable" };
-    const payload = await response.json() as { threats?: unknown };
-    if (payload.threats !== undefined && !Array.isArray(payload.threats)) return { ...base, status: "unavailable" };
-    const threats = (payload.threats ?? []) as Array<{ threatTypes?: unknown }>;
-    const threatTypes = threats.flatMap((item) => Array.isArray(item.threatTypes) ? item.threatTypes.filter((value): value is string => typeof value === "string").slice(0, 8) : []);
-    return { ...base, status: threats.length ? "match" : "not_found", threatTypes: [...new Set(threatTypes)] };
+    const payload = await response.json() as { matches?: unknown };
+    if (payload.matches !== undefined && !Array.isArray(payload.matches)) return { ...base, status: "unavailable" };
+    const matches = (payload.matches ?? []) as Array<{ threatType?: unknown }>;
+    const threatTypes = matches.map((item) => item?.threatType).filter((value): value is string => typeof value === "string").slice(0, 8);
+    return { ...base, status: matches.length ? "match" : "not_found", threatTypes: [...new Set(threatTypes)] };
   } catch {
     return { ...base, status: "unavailable" };
   }

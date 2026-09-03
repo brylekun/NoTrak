@@ -24,17 +24,26 @@ describe("reputation provider normalization", () => {
 
     const [input, options] = request.mock.calls[0]!;
     const endpoint = new URL(String(input));
-    expect(endpoint.searchParams.getAll("urls")).toEqual(["https://example.com"]);
+    expect(endpoint.pathname).toBe("/v4/threatMatches:find");
     expect(endpoint.searchParams.has("key")).toBe(false);
+    expect(options?.method).toBe("POST");
     expect(new Headers(options?.headers).get("x-goog-api-key")).toBe("secret-key");
+    expect(JSON.parse(String(options?.body))).toMatchObject({
+      threatInfo: {
+        threatTypes: ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
+        platformTypes: ["ANY_PLATFORM"],
+        threatEntryTypes: ["URL"],
+        threatEntries: [{ url: "https://example.com" }],
+      },
+    });
   });
 
   it("normalizes Google threat matches, misses, and provider failures", async () => {
-    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ threats: [{ threatTypes: ["SOCIAL_ENGINEERING"] }] }))).resolves.toMatchObject({ status: "match", threatTypes: ["SOCIAL_ENGINEERING"] });
-    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ threats: [] }))).resolves.toMatchObject({ status: "not_found" });
-    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ cacheDuration: "300s" }))).resolves.toMatchObject({ status: "not_found" });
+    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ matches: [{ threatType: "SOCIAL_ENGINEERING" }] }))).resolves.toMatchObject({ status: "match", threatTypes: ["SOCIAL_ENGINEERING"] });
+    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ matches: [] }))).resolves.toMatchObject({ status: "not_found" });
+    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({}))).resolves.toMatchObject({ status: "not_found" });
     await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({}, 503))).resolves.toMatchObject({ status: "unavailable" });
-    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ threats: "malformed" }))).resolves.toMatchObject({ status: "unavailable" });
+    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ matches: "malformed" }))).resolves.toMatchObject({ status: "unavailable" });
     const timeout = vi.fn(async () => { throw new DOMException("Timed out", "AbortError"); }) as unknown as typeof fetch;
     await expect(queryGoogleSafeBrowsing("https://example.com", "key", timeout)).resolves.toMatchObject({ status: "unavailable" });
   });
