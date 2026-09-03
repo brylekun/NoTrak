@@ -31,7 +31,7 @@ const methods = [
   },
   {
     title: "Connection speed",
-    body: "After explicit activation, the browser sends adaptive download, upload, and latency measurements directly to Cloudflare’s speed endpoints. The test ramps to larger synthetic payloads only while earlier requests are too short to characterize the connection, with disclosed maximum transfer sizes. Results are derived from valid browser Resource Timing samples; unavailable values are not presented as zero. Packet-loss testing, credentials, and Cloudflare’s aggregate result-logging endpoint are disabled.",
+    body: "After explicit activation, the browser sends small zero-byte latency probes followed by adaptive download and upload measurements directly to Cloudflare’s speed endpoints. The test ramps to larger synthetic payloads only while earlier requests are too short to characterize the connection, with disclosed maximum transfer sizes. Results are derived from valid browser timing samples; unavailable values are not presented as zero, and incomplete runs are labeled partial. Packet-loss testing, credentials, and Cloudflare’s aggregate result-logging endpoint are disabled.",
   },
   {
     title: "PDF metadata cleaning",

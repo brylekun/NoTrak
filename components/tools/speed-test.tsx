@@ -29,11 +29,49 @@ const measurements = [
   { type: "upload" as const, bytes: 1_000_000, count: 4 },
   { type: "download" as const, bytes: 25_000_000, count: 2 },
   { type: "upload" as const, bytes: 10_000_000, count: 3 },
-  { type: "download" as const, bytes: 100_000_000, count: 1 },
-  { type: "upload" as const, bytes: 50_000_000, count: 1 },
+  { type: "upload" as const, bytes: 25_000_000, count: 2 },
 ];
 
-function normalizeResults(results: Results): SpeedSummary {
+const latencyProbeCount = 11;
+const minimumIdleLatencySamples = 5;
+
+async function measureIdleLatency(signal: AbortSignal): Promise<Pick<SpeedSummary, "latency" | "jitter">> {
+  const samples: number[] = [];
+
+  for (let index = 0; index < latencyProbeCount; index += 1) {
+    const url = new URL("https://speed.cloudflare.com/__down");
+    url.searchParams.set("bytes", "0");
+    url.searchParams.set("no-cache", `${Date.now()}-${index}`);
+    const startedAt = performance.now();
+
+    try {
+      const response = await fetch(url, {
+        cache: "no-store",
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
+        signal: AbortSignal.any([signal, AbortSignal.timeout(5_000)]),
+      });
+      if (!response.ok) continue;
+      await response.arrayBuffer();
+
+      // The first request establishes the connection and is intentionally not
+      // counted as steady-state latency.
+      if (index > 0) samples.push(performance.now() - startedAt);
+    } catch (reason) {
+      if (signal.aborted) throw reason;
+    }
+  }
+
+  return {
+    latency: medianPositiveMeasurement(samples, minimumIdleLatencySamples),
+    jitter: latencyJitter(samples, minimumIdleLatencySamples),
+  };
+}
+
+function normalizeResults(
+  results: Results,
+  idleLatency: Pick<SpeedSummary, "latency" | "jitter">,
+): SpeedSummary {
   const summary = results.getSummary();
   const unloadedLatency = results.getUnloadedLatencyPoints();
   const downloadLoadedLatency = results.getDownLoadedLatencyPoints();
@@ -54,8 +92,8 @@ function normalizeResults(results: Results): SpeedSummary {
         .map((point) => point.bps),
       3,
     ),
-    latency: medianPositiveMeasurement(unloadedLatency, 5),
-    jitter: latencyJitter(unloadedLatency, 5),
+    latency: idleLatency.latency ?? medianPositiveMeasurement(unloadedLatency, minimumIdleLatencySamples),
+    jitter: idleLatency.jitter ?? latencyJitter(unloadedLatency, minimumIdleLatencySamples),
     downLoadedLatency: medianPositiveMeasurement(downloadLoadedLatency, 2),
     upLoadedLatency: medianPositiveMeasurement(uploadLoadedLatency, 2),
     totalDurationMs: summary.totalDurationMs,
@@ -64,25 +102,52 @@ function normalizeResults(results: Results): SpeedSummary {
 
 export function SpeedTest() {
   const engineRef = useRef<SpeedTestEngine | null>(null);
+  const probeControllerRef = useRef<AbortController | null>(null);
+  const runIdRef = useRef(0);
   const [summary, setSummary] = useState<SpeedSummary>({});
   const [running, setRunning] = useState(false);
+  const [engineReady, setEngineReady] = useState(false);
   const [started, setStarted] = useState(false);
   const [finished, setFinished] = useState(false);
   const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState("Ready to test");
   const [message, setMessage] = useState("");
 
-  useEffect(() => () => engineRef.current?.pause(), []);
+  useEffect(() => () => {
+    runIdRef.current += 1;
+    probeControllerRef.current?.abort();
+    engineRef.current?.pause();
+  }, []);
 
   async function createAndStart() {
+    const runId = runIdRef.current + 1;
+    runIdRef.current = runId;
+    probeControllerRef.current?.abort();
+    engineRef.current?.pause();
+    engineRef.current = null;
+
+    const probeController = new AbortController();
+    probeControllerRef.current = probeController;
     setStarted(true);
     setFinished(false);
+    setEngineReady(false);
+    setRunning(true);
+    setSummary({});
     setMessage("");
-    setStage("Preparing Cloudflare measurements…");
+    setStage("Measuring idle latency and jitter…");
     setProgress(0);
 
     try {
+      const idleLatency = await measureIdleLatency(probeController.signal);
+      if (runId !== runIdRef.current) return;
+      probeControllerRef.current = null;
+      setSummary(idleLatency);
+      setProgress(10);
+      setStage("Preparing bandwidth measurements…");
+
       const SpeedTestEngine = (await import("@cloudflare/speedtest")).default;
+      if (runId !== runIdRef.current) return;
+      const measurementErrors: string[] = [];
       const engine = new SpeedTestEngine({
         autoStart: false,
         measurements,
@@ -96,27 +161,52 @@ export function SpeedTest() {
         bandwidthAbortRequestDuration: 10_000,
       });
 
-      engine.onRunningChange = setRunning;
+      engine.onRunningChange = (isRunning) => {
+        if (runId === runIdRef.current) setRunning(isRunning);
+      };
       engine.onPhaseChange = ({ measurementId, measurement }) => {
-        setProgress(Math.round((measurementId / measurements.length) * 100));
+        if (runId !== runIdRef.current) return;
+        setProgress(10 + Math.round((measurementId / measurements.length) * 90));
         setStage(speedTestStage(measurement.type));
       };
-      engine.onResultsChange = () => setSummary(normalizeResults(engine.results));
+      engine.onResultsChange = () => {
+        if (runId === runIdRef.current) setSummary(normalizeResults(engine.results, idleLatency));
+      };
       engine.onFinish = (results) => {
-        setSummary(normalizeResults(results));
+        if (runId !== runIdRef.current) return;
+        const finalSummary = normalizeResults(results, idleLatency);
+        const requiredResults = [
+          finalSummary.download,
+          finalSummary.upload,
+          finalSummary.latency,
+          finalSummary.jitter,
+          finalSummary.downLoadedLatency,
+          finalSummary.upLoadedLatency,
+        ];
+        const partial = measurementErrors.length > 0 || requiredResults.some((value) => value === undefined);
+
+        setSummary(finalSummary);
         setProgress(100);
-        setStage("Test complete");
+        setStage(partial ? "Partial results" : "Test complete");
+        setMessage(partial ? "Some Cloudflare measurements were unavailable. The valid results are shown; try again on a stable connection for a complete result." : "");
         setFinished(true);
         setRunning(false);
+        setEngineReady(false);
       };
       engine.onError = (error) => {
-        setMessage(error || "Cloudflare could not complete this measurement.");
-        setStage("Test interrupted");
+        measurementErrors.push(error || "Cloudflare could not complete this measurement.");
+        if (runId !== runIdRef.current) return;
+        setMessage("A Cloudflare measurement failed. NoTrak will preserve any valid partial results.");
+        setStage("Measurement issue detected…");
       };
       engineRef.current = engine;
+      setEngineReady(true);
       engine.play();
     } catch (reason) {
+      if (runId !== runIdRef.current) return;
       setRunning(false);
+      setEngineReady(false);
+      setFinished(true);
       setMessage(reason instanceof Error ? reason.message : "The speed-test engine could not start.");
       setStage("Test unavailable");
     }
@@ -134,12 +224,7 @@ export function SpeedTest() {
   }
 
   function restart() {
-    setSummary({});
-    setFinished(false);
-    setMessage("");
-    setProgress(0);
-    setStage("Restarting measurements…");
-    engineRef.current?.restart();
+    void createAndStart();
   }
 
   const metrics = [
@@ -154,7 +239,7 @@ export function SpeedTest() {
   return (
     <div>
       <div className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4 text-sm leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950/35 dark:text-amber-200">
-        Starting the test sends measurement traffic directly to Cloudflare, which can see your IP address. No file or typed content is sent. The adaptive test usually stops early, but can use up to roughly 185 MB download and 85 MB upload on very fast connections. NoTrak disables Cloudflare result logging.
+        Starting the test sends measurement traffic directly to Cloudflare, which can see your IP address. No file or typed content is sent. The adaptive test usually stops early, but can use up to roughly 85 MB download and 85 MB upload on very fast connections. NoTrak disables Cloudflare result logging.
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -181,7 +266,7 @@ export function SpeedTest() {
 
       <div className="mt-6 flex flex-wrap gap-2">
         {!started && <Button className="h-10 px-4" onClick={createAndStart}><Gauge /> Start speed test</Button>}
-        {started && !finished && <Button className="h-10 px-4" onClick={togglePause}>{running ? <Pause /> : <Play />}{running ? "Pause" : "Resume"}</Button>}
+        {started && !finished && engineReady && <Button className="h-10 px-4" onClick={togglePause}>{running ? <Pause /> : <Play />}{running ? "Pause" : "Resume"}</Button>}
         {started && <Button className="h-10 px-4" variant="outline" onClick={restart}><RotateCcw /> Restart</Button>}
       </div>
 

@@ -26,6 +26,7 @@ describe("speed result formatting", () => {
 
   it("calculates latency only from positive measurements", () => {
     expect(medianPositiveMeasurement([0, 12, 8, 10, Number.NaN], 3)).toBe(10);
+    expect(medianPositiveMeasurement([8, 12, 10, 14], 4)).toBe(11);
     expect(medianPositiveMeasurement([0, 12], 2)).toBeUndefined();
     expect(latencyJitter([0, 10, 14, 11], 3)).toBe(3.5);
     expect(latencyJitter([0, 10], 2)).toBeUndefined();
