@@ -1,0 +1,73 @@
+import type { Metadata } from "next";
+
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteHeader } from "@/components/layout/site-header";
+
+export const metadata: Metadata = {
+  title: "Methodology",
+  description: "How NoTrak tools process data, calculate results, and communicate limitations.",
+};
+
+const methods = [
+  {
+    title: "URL reputation",
+    body: "Before any network request, NoTrak validates the URL and checks structural signals such as raw IP hosts, Punycode, mixed scripts, unusual ports, shortening services, excessive subdomains, and suspicious wording. After explicit confirmation, the full URL is sent through a no-store API route to configured Google Safe Browsing and URLhaus services. URLhaus specifically covers malware-distribution URLs, not general phishing. NoTrak never resolves, visits, renders, or downloads the submitted destination. A provider miss is never called safe.",
+  },
+  {
+    title: "Malware reputation",
+    body: "The browser calculates the selected file’s SHA-256 digest locally. After explicit confirmation, only the 64-character digest is sent through NoTrak to MalwareBazaar; the route rejects every other request shape and cannot accept file bytes. A not-found result means only that the provider did not recognize the hash at check time.",
+  },
+  {
+    title: "QR scanning and JWT decoding",
+    body: "Selected QR images and camera frames are decoded locally; camera access starts only after a button press, and decoded links are never opened automatically. JWTs are Base64URL-decoded locally as untrusted JSON. No signature, issuer, audience, or authenticity verification is performed.",
+  },
+  {
+    title: "File encryption",
+    body: "NoTrak v1 containers use AES-256-GCM authenticated encryption. A unique 16-byte salt and 12-byte IV are generated for every file. PBKDF2-HMAC-SHA-256 derives the key using 600,000 iterations. The authenticated header stores the format version, work factor, salt, IV, and original filename. Forgotten passwords cannot be recovered.",
+  },
+  {
+    title: "Browser privacy check",
+    body: "The check reports a small set of properties an ordinary page can observe after it loads. The surface rating counts available signals and credits reported privacy preferences. It is educational—not a uniqueness study, tracker scan, or proof of anonymity.",
+  },
+  {
+    title: "Connection speed",
+    body: "After explicit activation, the browser sends bounded download, upload, and latency measurements directly to Cloudflare’s speed endpoints. Results are derived from browser Resource Timing data. Packet-loss testing, credentials, and Cloudflare’s aggregate result-logging endpoint are disabled.",
+  },
+  {
+    title: "PDF metadata cleaning",
+    body: "The browser removes standard document-information fields and catalog XMP metadata, saves a new PDF, reopens it, and verifies those fields are absent. Pages and visible content are preserved, but visible names, annotations, attachments, layers, and document text are not redacted.",
+  },
+  {
+    title: "Image processing",
+    body: "Images are decoded and re-encoded through the browser Canvas API. The exported copy is checked for an EXIF signature. Re-encoding does not remove information visibly present in pixels and may change compression or color handling.",
+  },
+  {
+    title: "Random generation and hashing",
+    body: "Passwords, passphrases, and UUIDs use the browser’s cryptographically secure random generator. Hashes use Web Crypto SHA-256, SHA-384, or SHA-512. Hashes are fingerprints, not encryption, and cannot protect readable content by themselves.",
+  },
+];
+
+export default function MethodologyPage() {
+  return (
+    <div className="flex min-h-screen flex-col">
+      <SiteHeader />
+      <main className="flex-1">
+        <div className="mx-auto w-full max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
+          <p className="eyebrow">Methodology</p>
+          <h1 className="mt-3 max-w-3xl text-balance text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">Clear methods. Honest limits.</h1>
+          <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">NoTrak explains what each result means, what leaves your device, and what the tool cannot guarantee.</p>
+
+          <div className="mt-12 grid gap-4 md:grid-cols-2">
+            {methods.map((method) => (
+              <section key={method.title} className="rounded-3xl border border-border/80 bg-card p-6">
+                <h2 className="text-lg font-semibold tracking-[-0.025em]">{method.title}</h2>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">{method.body}</p>
+              </section>
+            ))}
+          </div>
+        </div>
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
