@@ -1,4 +1,4 @@
-# V1.1 release checklist
+# V1.2 release checklist
 
 This runbook separates repository checks from actions that require access to Vercel and the reputation-provider accounts. Never paste credentials into issues, pull requests, logs, or committed files.
 
@@ -18,8 +18,9 @@ pnpm release:check
 1. Confirm the deployment remains personal and non-commercial before enabling Google Safe Browsing. A commercial deployment needs an eligible service such as Google Web Risk.
 2. Review URLhaus and MalwareBazaar Community API fair-use, attribution, and commercial-use requirements.
 3. Create separate credentials where the provider supports environment separation.
-4. Add `GOOGLE_SAFE_BROWSING_API_KEY`, `URLHAUS_AUTH_KEY`, and `MALWAREBAZAAR_API_KEY` to Vercel Preview only. Do not use a `NEXT_PUBLIC_` prefix.
-5. Verify their presence without printing values:
+4. Add `GOOGLE_SAFE_BROWSING_API_KEY`, `URLHAUS_AUTH_KEY`, and `MALWAREBAZAAR_API_KEY` to Vercel Preview only. Do not use a `NEXT_PUBLIC_` prefix for secrets.
+5. Set the non-secret `NEXT_PUBLIC_SITE_URL` to the canonical production origin, such as `https://notrak.vercel.app`, so Preview builds emit production canonical, Open Graph, sitemap, and robots URLs.
+6. Verify the provider credentials without printing values:
 
 ```bash
 vercel env run --environment=preview -- pnpm release:providers
@@ -44,7 +45,7 @@ Provider notices and source links are maintained in `PROVIDER_NOTICES.md`.
 2. Begin with a log action and observe Preview traffic.
 3. Change the rule to rate limit by client IP, initially 30 requests per 60 seconds with a 429 response. Tune only from aggregate traffic and provider-quota data, never from stored user inputs.
 4. Enable Vercel usage/spend notifications and the available quota alerts for all three providers.
-5. Confirm quota or provider outages degrade to `unavailable`/`provider_unavailable` without disabling local analysis.
+5. Confirm quotas, rate limits, timeouts, credential failures, malformed responses, and provider outages produce their distinct incomplete states without disabling local analysis or being presented as a clean result.
 
 The in-process 120-request ceiling is defense in depth only; serverless instances cannot enforce a global quota.
 
@@ -54,6 +55,8 @@ The in-process 120-request ceiling is defense in depth only; serverless instance
 - Test responsive layouts and keyboard navigation at mobile, tablet, and desktop widths.
 - Test QR camera permission on a physical iOS and Android device. Confirm permission is requested only after **Start camera** and the stream stops on reset/navigation.
 - Re-open converted images and cleaned PDFs and verify the expected output and metadata behavior.
+- Install the app once, open representative local tools, disable the network, and verify cached local workflows still run while `/api` responses remain absent from Cache Storage.
+- Inspect a real photo in EXIF Viewer, verify its named fields and any location warning, then confirm EXIF Remover produces a clean downloadable copy.
 - Run Lighthouse accessibility and performance checks in an incognito profile and record the results outside the repository if they contain deployment details.
 - Reconfirm Privacy, Methodology, provider notices, and the exact data-transfer disclosure in each reputation tool.
 

@@ -41,17 +41,6 @@ export function outputImageName(originalName: string, suffix: string, type: Supp
   return `${base}-${suffix}.${extension}`;
 }
 
-export function containsExifSegment(bytes: ArrayBuffer) {
-  const view = new Uint8Array(bytes);
-  for (let index = 0; index <= view.length - 6; index += 1) {
-    if (
-      view[index] === 0x45 && view[index + 1] === 0x78 && view[index + 2] === 0x69 &&
-      view[index + 3] === 0x66 && view[index + 4] === 0x00 && view[index + 5] === 0x00
-    ) return true;
-  }
-  return false;
-}
-
 export async function processImage(file: File, options: ImageProcessOptions): Promise<ProcessedImage> {
   validateImageFile(file);
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });

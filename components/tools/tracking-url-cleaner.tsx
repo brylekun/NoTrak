@@ -6,6 +6,7 @@ import { Check, Copy, Eraser, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cleanTrackingUrl, type CleanUrlResult } from "@/lib/privacy/tracking-url";
+import { COPY_FALLBACK_MESSAGE, copyToClipboard } from "@/lib/clipboard";
 
 export function TrackingUrlCleaner() {
   const [input, setInput] = useState("");
@@ -24,7 +25,10 @@ export function TrackingUrlCleaner() {
 
   async function copyResult() {
     if (!result) return;
-    await navigator.clipboard.writeText(result.cleanedUrl);
+    if (!(await copyToClipboard(result.cleanedUrl))) {
+      setMessage(COPY_FALLBACK_MESSAGE);
+      return;
+    }
     setMessage("Clean link copied.");
     window.setTimeout(() => setMessage(""), 1800);
   }
@@ -34,6 +38,14 @@ export function TrackingUrlCleaner() {
     setResult(null);
     setMessage("");
   }
+
+  const removals = result
+    ? [
+        ...result.removedParameters.map((name) => ({ key: `q:${name}`, name, source: "query" as const })),
+        ...result.removedFragmentParameters.map((name) => ({ key: `f:${name}`, name, source: "fragment" as const })),
+        ...result.removedPathSegments.map((name) => ({ key: `p:${name}`, name, source: "path" as const })),
+      ]
+    : [];
 
   return (
     <div>
@@ -64,9 +76,7 @@ export function TrackingUrlCleaner() {
           <div className="flex items-center justify-between gap-4">
             <label htmlFor="cleaned-url" className="text-sm font-semibold">Clean link</label>
             <span className="mode-local">
-              {result.removedParameters.length === 0
-                ? "Already clean"
-                : `${result.removedParameters.length} removed`}
+              {removals.length === 0 ? "Already clean" : `${removals.length} removed`}
             </span>
           </div>
           <div className="mt-2 flex gap-2">
@@ -75,14 +85,21 @@ export function TrackingUrlCleaner() {
               {message.startsWith("Clean link copied") ? <Check /> : <Copy />}
             </Button>
           </div>
-          {result.removedParameters.length > 0 && (
+          {removals.length > 0 && (
             <div className="mt-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Removed parameters</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {result.removedParameters.map((parameter) => (
-                  <code key={parameter} className="rounded-lg bg-muted px-2 py-1 text-xs">{parameter}</code>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Removed</p>
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {removals.map(({ key, name, source }) => (
+                  <li key={key} className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-2 py-1 text-xs">
+                    <code>{name}</code>
+                    {source !== "query" && (
+                      <span className="text-[10px] uppercase tracking-[0.08em] text-muted-foreground">
+                        {source === "fragment" ? "in #fragment" : "path"}
+                      </span>
+                    )}
+                  </li>
                 ))}
-              </div>
+              </ul>
             </div>
           )}
         </div>

@@ -3,17 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import type SpeedTestEngine from "@cloudflare/speedtest";
 import type { Results } from "@cloudflare/speedtest";
-import { Gauge, Pause, Play, RotateCcw } from "lucide-react";
+import { CheckCircle2, Gauge, Pause, Play, RotateCcw, TriangleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
+  assessSpeedQuality,
   filterLatencyOutliers,
   formatMbps,
   formatMilliseconds,
   latencyJitter,
   medianPositiveMeasurement,
   positiveEstimate,
+  speedQualityLabel,
   speedTestStage,
+  type SpeedQuality,
   type SpeedSummary,
 } from "@/lib/network/speed";
 
@@ -36,7 +39,9 @@ const measurements = [
 const latencyProbeCount = 11;
 const minimumIdleLatencySamples = 5;
 
-async function measureIdleLatency(signal: AbortSignal): Promise<Pick<SpeedSummary, "latency" | "jitter">> {
+async function measureIdleLatency(
+  signal: AbortSignal,
+): Promise<Pick<SpeedSummary, "latency" | "jitter"> & { samples: number[] }> {
   const samples: number[] = [];
 
   for (let index = 0; index < latencyProbeCount; index += 1) {
@@ -71,38 +76,48 @@ async function measureIdleLatency(signal: AbortSignal): Promise<Pick<SpeedSummar
   return {
     latency: medianPositiveMeasurement(filteredSamples, minimumIdleLatencySamples),
     jitter: latencyJitter(filteredSamples, minimumIdleLatencySamples),
+    samples: filteredSamples,
   };
 }
+
+type NormalizedResults = {
+  summary: SpeedSummary;
+  downloadSamples: number[];
+  uploadSamples: number[];
+  latencySamples: number[];
+};
 
 function normalizeResults(
   results: Results,
   idleLatency: Pick<SpeedSummary, "latency" | "jitter">,
-): SpeedSummary {
+  idleLatencySamples: number[],
+): NormalizedResults {
   const summary = results.getSummary();
   const unloadedLatency = filterLatencyOutliers(results.getUnloadedLatencyPoints());
   const downloadLoadedLatency = filterLatencyOutliers(results.getDownLoadedLatencyPoints());
   const uploadLoadedLatency = filterLatencyOutliers(results.getUpLoadedLatencyPoints());
+  const downloadSamples = results.getDownloadBandwidthPoints()
+    .filter((point) => point.duration >= 10)
+    .map((point) => point.bps);
+  const uploadSamples = results.getUploadBandwidthPoints()
+    .filter((point) => point.duration >= 10)
+    .map((point) => point.bps);
 
-  return {
-    download: positiveEstimate(
-      summary.download,
-      results.getDownloadBandwidthPoints()
-        .filter((point) => point.duration >= 10)
-        .map((point) => point.bps),
-      3,
-    ),
-    upload: positiveEstimate(
-      summary.upload,
-      results.getUploadBandwidthPoints()
-        .filter((point) => point.duration >= 10)
-        .map((point) => point.bps),
-      3,
-    ),
+  const normalized: SpeedSummary = {
+    download: positiveEstimate(summary.download, downloadSamples, 3),
+    upload: positiveEstimate(summary.upload, uploadSamples, 3),
     latency: idleLatency.latency ?? medianPositiveMeasurement(unloadedLatency, minimumIdleLatencySamples),
     jitter: idleLatency.jitter ?? latencyJitter(unloadedLatency, minimumIdleLatencySamples),
     downLoadedLatency: medianPositiveMeasurement(downloadLoadedLatency, 2),
     upLoadedLatency: medianPositiveMeasurement(uploadLoadedLatency, 2),
     totalDurationMs: summary.totalDurationMs,
+  };
+
+  return {
+    summary: normalized,
+    downloadSamples,
+    uploadSamples,
+    latencySamples: idleLatencySamples.length >= 4 ? idleLatencySamples : unloadedLatency,
   };
 }
 
@@ -111,6 +126,7 @@ export function SpeedTest() {
   const probeControllerRef = useRef<AbortController | null>(null);
   const runIdRef = useRef(0);
   const [summary, setSummary] = useState<SpeedSummary>({});
+  const [quality, setQuality] = useState<SpeedQuality | null>(null);
   const [running, setRunning] = useState(false);
   const [engineReady, setEngineReady] = useState(false);
   const [started, setStarted] = useState(false);
@@ -139,12 +155,13 @@ export function SpeedTest() {
     setEngineReady(false);
     setRunning(true);
     setSummary({});
+    setQuality(null);
     setMessage("");
     setStage("Measuring idle latency and jitter…");
     setProgress(0);
 
     try {
-      const idleLatency = await measureIdleLatency(probeController.signal);
+      const { samples: idleLatencySamples, ...idleLatency } = await measureIdleLatency(probeController.signal);
       if (runId !== runIdRef.current) return;
       probeControllerRef.current = null;
       setSummary(idleLatency);
@@ -176,25 +193,26 @@ export function SpeedTest() {
         setStage(speedTestStage(measurement.type));
       };
       engine.onResultsChange = () => {
-        if (runId === runIdRef.current) setSummary(normalizeResults(engine.results, idleLatency));
+        if (runId === runIdRef.current) {
+          setSummary(normalizeResults(engine.results, idleLatency, idleLatencySamples).summary);
+        }
       };
       engine.onFinish = (results) => {
         if (runId !== runIdRef.current) return;
-        const finalSummary = normalizeResults(results, idleLatency);
-        const requiredResults = [
-          finalSummary.download,
-          finalSummary.upload,
-          finalSummary.latency,
-          finalSummary.jitter,
-          finalSummary.downLoadedLatency,
-          finalSummary.upLoadedLatency,
-        ];
-        const partial = measurementErrors.length > 0 || requiredResults.some((value) => value === undefined);
+        const normalized = normalizeResults(results, idleLatency, idleLatencySamples);
+        const assessed = assessSpeedQuality({
+          summary: normalized.summary,
+          downloadSamples: normalized.downloadSamples,
+          uploadSamples: normalized.uploadSamples,
+          latencySamples: normalized.latencySamples,
+          measurementErrors: measurementErrors.length,
+        });
 
-        setSummary(finalSummary);
+        setSummary(normalized.summary);
+        setQuality(assessed);
         setProgress(100);
-        setStage(partial ? "Partial results" : "Test complete");
-        setMessage(partial ? "Some Cloudflare measurements were unavailable. The valid results are shown; try again on a stable connection for a complete result." : "");
+        setStage(speedQualityLabel(assessed.level));
+        setMessage("");
         setFinished(true);
         setRunning(false);
         setEngineReady(false);
@@ -244,7 +262,7 @@ export function SpeedTest() {
 
   return (
     <div>
-      <div className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4 text-sm leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950/35 dark:text-amber-200">
+      <div className="callout-warning">
         Starting the test sends measurement traffic directly to Cloudflare, which can see your IP address. No file or typed content is sent. The adaptive test usually stops early, but can use up to roughly 85 MB download and 85 MB upload on very fast connections. NoTrak disables Cloudflare result logging.
       </div>
 
@@ -276,9 +294,28 @@ export function SpeedTest() {
         {started && <Button className="h-10 px-4" variant="outline" onClick={restart}><RotateCcw /> Restart</Button>}
       </div>
 
+      {finished && quality && (
+        <div
+          className={quality.level === "complete" ? "mt-6 callout-info" : "mt-6 callout-warning"}
+          aria-live="polite"
+        >
+          <div className="flex items-start gap-3">
+            {quality.level === "complete"
+              ? <CheckCircle2 className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+              : <TriangleAlert className="mt-0.5 size-5 shrink-0" aria-hidden="true" />}
+            <div>
+              <p className="font-semibold">{speedQualityLabel(quality.level)}</p>
+              <ul className="mt-1 grid gap-1">
+                {quality.reasons.map((reason) => <li key={reason}>{reason}</li>)}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
       {finished && summary.totalDurationMs !== undefined && (
         <p className="mt-4 text-sm text-muted-foreground">
-          Completed in {(summary.totalDurationMs / 1000).toFixed(1)} seconds. An em dash means the browser did not produce enough valid samples. Results are estimates and can vary with Wi-Fi, browser load, and server conditions.
+          Completed in {(summary.totalDurationMs / 1000).toFixed(1)} seconds. An em dash means the browser did not produce enough valid samples.
         </p>
       )}
       <p className="mt-4 min-h-5 text-sm text-destructive" role="alert" aria-live="polite">{message}</p>

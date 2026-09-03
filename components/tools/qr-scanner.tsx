@@ -7,6 +7,7 @@ import { Camera, Check, Copy, ImageUp, RotateCcw, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { COPY_FALLBACK_MESSAGE, copyToClipboard } from "@/lib/clipboard";
 
 const MAX_QR_IMAGE_BYTES = 15 * 1024 * 1024;
 
@@ -59,12 +60,19 @@ export function QrScanner() {
     } finally { setBusy(false); }
   }
 
-  async function copy() { await navigator.clipboard.writeText(result); setMessage("Decoded text copied."); window.setTimeout(() => setMessage(""), 1800); }
+  async function copy() {
+    if (!(await copyToClipboard(result))) {
+      setMessage(COPY_FALLBACK_MESSAGE);
+      return;
+    }
+    setMessage("Decoded text copied.");
+    window.setTimeout(() => setMessage(""), 1800);
+  }
   function reset() { stopCamera(); setResult(""); setMessage(""); }
 
   return (
     <div>
-      <div className="rounded-2xl border border-primary/20 bg-primary/6 p-4 text-sm leading-6">Images and camera frames are decoded locally. Camera permission is requested only after you press <strong>Start camera</strong>.</div>
+      <div className="callout-info">Images and camera frames are decoded locally. Camera permission is requested only after you press <strong>Start camera</strong>.</div>
       <label htmlFor="qr-scan-image" className="mt-6 block text-sm font-semibold">QR image</label>
       <Input id="qr-scan-image" className="mt-2 h-11 cursor-pointer pt-2" type="file" accept="image/*" onChange={(event) => void scanFile(event.target.files?.[0] ?? null)} />
       <div className="relative mt-5 overflow-hidden rounded-2xl bg-black"><video ref={videoRef} className={`aspect-video w-full object-cover ${cameraActive ? "block" : "hidden"}`} muted playsInline /><div className={`grid aspect-video place-items-center text-sm text-white/70 ${cameraActive ? "hidden" : ""}`}><Camera className="mb-2 size-8" /><span>Camera stays off until requested</span></div></div>

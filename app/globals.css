@@ -189,4 +189,54 @@
   .mode-external {
     @apply bg-amber-100 text-amber-800 dark:bg-amber-900/35 dark:text-amber-200;
   }
+
+  /* Shared disclosure panels. Warning marks a boundary where data leaves the
+     device; info marks a local-only explanation. Both are themed here once so
+     tool components never hardcode a palette color. */
+  .callout-warning,
+  .callout-info {
+    @apply rounded-2xl border p-4 text-sm leading-6;
+  }
+
+  .callout-warning {
+    @apply border-amber-300/60 bg-amber-50 text-amber-950 dark:border-amber-900 dark:bg-amber-950/35 dark:text-amber-100;
+  }
+
+  .callout-info {
+    @apply border-primary/20 bg-primary/6 text-foreground;
+  }
+
+  .callout-neutral {
+    @apply rounded-2xl border border-border/70 bg-muted/45 p-4 text-sm leading-6 text-muted-foreground;
+  }
+
+  /* Exposure badges carry a word as well as a color so meaning never depends on
+     hue alone. */
+  .surface-exposed,
+  .surface-withheld {
+    @apply inline-flex w-fit items-center rounded-full px-2 py-0.5 text-[11px] font-semibold;
+  }
+
+  .surface-exposed {
+    @apply bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-100;
+  }
+
+  .surface-withheld {
+    @apply bg-primary/10 text-primary;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .tool-card:hover {
+    transform: none;
+  }
 }

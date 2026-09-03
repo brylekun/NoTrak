@@ -4,7 +4,7 @@ type Request =
   | { action: "encrypt"; buffer: ArrayBuffer; filename: string; password: string }
   | { action: "decrypt"; buffer: ArrayBuffer; password: string };
 
-type Response = { buffer?: ArrayBuffer; filename?: string; error?: string };
+type Response = { buffer?: ArrayBuffer; filename?: string; version?: number; filenameWasEncrypted?: boolean; error?: string };
 
 const scope = self as unknown as {
   onmessage: ((event: MessageEvent<Request>) => void) | null;
@@ -18,7 +18,15 @@ scope.onmessage = async ({ data }) => {
       scope.postMessage({ buffer }, [buffer]);
     } else {
       const result = await decryptFilePayload(data.buffer, data.password);
-      scope.postMessage({ buffer: result.bytes, filename: result.filename }, [result.bytes]);
+      scope.postMessage(
+        {
+          buffer: result.bytes,
+          filename: result.filename,
+          version: result.version,
+          filenameWasEncrypted: result.filenameWasEncrypted,
+        },
+        [result.bytes],
+      );
     }
   } catch (reason) {
     scope.postMessage({ error: reason instanceof Error ? reason.message : "File processing failed." });

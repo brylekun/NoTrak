@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { generateUuids } from "@/lib/developer/uuid";
+import { COPY_FALLBACK_MESSAGE, copyToClipboard } from "@/lib/clipboard";
 
 export function UuidGenerator() {
   const [count, setCount] = useState(5);
@@ -31,7 +32,11 @@ export function UuidGenerator() {
   }, [generate]);
 
   async function copy() {
-    await navigator.clipboard.writeText(values.join("\n"));
+    const copied = await copyToClipboard(values.join("\n"));
+    if (!copied) {
+      setMessage(COPY_FALLBACK_MESSAGE);
+      return;
+    }
     setMessage(values.length === 1 ? "UUID copied." : `${values.length} UUIDs copied.`);
     window.setTimeout(() => setMessage(""), 1800);
   }

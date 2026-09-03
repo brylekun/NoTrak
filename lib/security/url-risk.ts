@@ -35,10 +35,20 @@ function isIpHostname(hostname: string) {
 function isPrivateOrLocalHostname(hostname: string) {
   const bare = hostname.replace(/^\[|\]$/gu, "").toLowerCase();
   if (bare === "localhost" || bare.endsWith(".localhost") || bare.endsWith(".local")) return true;
-  if (bare.includes(":")) return bare === "::1" || bare.startsWith("fc") || bare.startsWith("fd") || bare.startsWith("fe8") || bare.startsWith("fe9") || bare.startsWith("fea") || bare.startsWith("feb");
+  if (bare.includes(":")) {
+    return bare === "::"
+      || bare === "::1"
+      || bare.startsWith("::ffff:")
+      || bare.startsWith("fc")
+      || bare.startsWith("fd")
+      || /^fe[89ab]/u.test(bare)
+      || /^fe[cdef]/u.test(bare)
+      || bare.startsWith("ff");
+  }
   const parts = bare.split(".").map(Number);
   if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part))) return false;
   return parts[0] === 0 || parts[0] === 10 || parts[0] === 127 || parts[0] >= 224
+    || (parts[0] === 100 && parts[1] >= 64 && parts[1] <= 127)
     || (parts[0] === 169 && parts[1] === 254)
     || (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31)
     || (parts[0] === 192 && parts[1] === 168);

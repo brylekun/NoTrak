@@ -23,7 +23,7 @@ const methods = [
   },
   {
     title: "File encryption",
-    body: "NoTrak v1 containers use AES-256-GCM authenticated encryption. A unique 16-byte salt and 12-byte IV are generated for every file. PBKDF2-HMAC-SHA-256 derives the key using 600,000 iterations. The authenticated header stores the format version, work factor, salt, IV, and original filename. Forgotten passwords cannot be recovered.",
+    body: "NoTrak v2 containers use AES-256-GCM authenticated encryption. A unique 16-byte salt and 12-byte IV are generated for every file, and PBKDF2-HMAC-SHA-256 derives the key using 600,000 iterations. The authenticated cleartext header stores only the format version, work factor, salt, and IV; the original filename is encrypted with the file contents. Legacy v1 containers still decrypt, but they stored the filename in their authenticated cleartext header. Forgotten passwords cannot be recovered.",
   },
   {
     title: "Browser privacy check",
@@ -31,7 +31,7 @@ const methods = [
   },
   {
     title: "Connection speed",
-    body: "After explicit activation, the browser sends small zero-byte latency probes followed by adaptive download and upload measurements directly to Cloudflare’s speed endpoints. Idle latency uses the Resource Timing interval from request start to response start after discarding connection warm-up and statistical outliers. The test ramps to larger synthetic payloads only while earlier requests are too short to characterize the connection, with disclosed maximum transfer sizes. Unavailable values are not presented as zero, and incomplete runs are labeled partial. Packet-loss testing, credentials, and Cloudflare’s aggregate result-logging endpoint are disabled.",
+    body: "After explicit activation, the browser sends small zero-byte latency probes followed by adaptive download and upload measurements directly to Cloudflare’s speed endpoints. Idle latency uses the Resource Timing interval from request start to response start after discarding connection warm-up and statistical outliers. The test ramps to larger synthetic payloads only while earlier requests are too short to characterize the connection, with disclosed maximum transfer sizes. Unavailable values are not presented as zero. Each run is rated complete, partial, or variable: partial means a value had too few valid samples or a measurement failed, and variable means every value arrived but the samples disagreed enough (measured as the interquartile range over the median) that the true figure is a range rather than one number. Packet-loss testing, credentials, and Cloudflare’s aggregate result-logging endpoint are disabled.",
   },
   {
     title: "PDF metadata cleaning",
@@ -39,7 +39,11 @@ const methods = [
   },
   {
     title: "Image processing",
-    body: "Images are decoded and re-encoded through the browser Canvas API. The exported copy is checked for an EXIF signature. Re-encoding does not remove information visibly present in pixels and may change compression or color handling.",
+    body: "Images are decoded and re-encoded through the browser Canvas API. The exported copy is checked for supported metadata containers across JPEG marker segments, PNG chunks, and WebP RIFF chunks. Re-encoding does not remove information visibly present in pixels, discards embedded ICC color profiles, and may change compression or color handling.",
+  },
+  {
+    title: "Offline availability",
+    body: "A service worker caches NoTrak\u2019s own pages and static assets so local tools can keep running without a network, demonstrating that their core processing does not depend on a server. The cache holds only NoTrak\u2019s files: no tool input, output, or selected file is written to it, cross-origin requests are left untouched, and the IP and reputation routes are excluded so a personalized response is never stored or replayed. Pages are fetched from the network first whenever one is available, so a cached copy does not normally hide an update.",
   },
   {
     title: "Random generation and hashing",

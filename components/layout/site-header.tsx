@@ -15,7 +15,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className="flex items-center gap-1 text-sm" aria-label="Main navigation">
-          <Link className="nav-link" href="/#tools">Tools</Link>
+          <Link className="nav-link" href="/tools">Tools</Link>
           <Link className="nav-link hidden sm:inline-flex" href="/methodology">Methodology</Link>
           <Link className="nav-link" href="/privacy">Privacy</Link>
           <ThemeToggle />

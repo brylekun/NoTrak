@@ -24,6 +24,9 @@ describe("URL risk analysis", () => {
     expect(() => parsePublicHttpUrl("javascript:alert(1)")).toThrow("Only HTTP and HTTPS");
     expect(() => parsePublicHttpUrl("https://user:secret@example.com/")).toThrow("usernames or passwords");
     expect(() => parsePublicHttpUrl("http://127.0.0.1/admin")).toThrow("Private, local, and loopback");
+    expect(() => parsePublicHttpUrl("http://[::ffff:127.0.0.1]/admin")).toThrow("Private, local, and loopback");
+    expect(() => parsePublicHttpUrl("http://[ff02::1]/admin")).toThrow("Private, local, and loopback");
+    expect(() => parsePublicHttpUrl("http://100.64.0.1/admin")).toThrow("Private, local, and loopback");
     expect(() => parsePublicHttpUrl("https://router.local/")).toThrow("Private, local, and loopback");
     expect(() => parsePublicHttpUrl(`https://example.com/${"a".repeat(2050)}`)).toThrow("too long");
   });

@@ -8,7 +8,14 @@ import { Input } from "@/components/ui/input";
 import { MAX_PLAINTEXT_BYTES, encryptedFilename } from "@/lib/crypto/file-encryption";
 import { formatByteSize } from "@/lib/crypto/hash";
 
-type Result = { url: string; name: string; size: number; action: "encrypt" | "decrypt" };
+type Result = {
+  url: string;
+  name: string;
+  size: number;
+  action: "encrypt" | "decrypt";
+  /** Set only when decrypting: whether the container hid its own filename. */
+  legacyCleartextName?: boolean;
+};
 
 export function FileEncryption() {
   const [action, setAction] = useState<"encrypt" | "decrypt">("encrypt");
@@ -64,11 +71,19 @@ export function FileEncryption() {
     clearResult();
     try {
       const buffer = await file.arrayBuffer();
-      const response = await new Promise<{ buffer: ArrayBuffer; filename?: string }>((resolve, reject) => {
+      type WorkerResponse = {
+        buffer?: ArrayBuffer;
+        filename?: string;
+        version?: number;
+        filenameWasEncrypted?: boolean;
+        error?: string;
+      };
+      const response = await new Promise<WorkerResponse & { buffer: ArrayBuffer }>((resolve, reject) => {
         const worker = new Worker(new URL("../../lib/workers/file-encryption.worker.ts", import.meta.url), { type: "module" });
-        worker.onmessage = (event: MessageEvent<{ buffer?: ArrayBuffer; filename?: string; error?: string }>) => {
+        worker.onmessage = (event: MessageEvent<WorkerResponse>) => {
           worker.terminate();
-          if (event.data.buffer) resolve({ buffer: event.data.buffer, filename: event.data.filename });
+          const { buffer } = event.data;
+          if (buffer) resolve({ ...event.data, buffer });
           else reject(new Error(event.data.error ?? "File processing failed."));
         };
         worker.onerror = () => {
@@ -85,7 +100,13 @@ export function FileEncryption() {
 
       const name = action === "encrypt" ? encryptedFilename(file.name) : (response.filename ?? "decrypted-file");
       const blob = new Blob([response.buffer], { type: "application/octet-stream" });
-      setResult({ url: URL.createObjectURL(blob), name, size: blob.size, action });
+      setResult({
+        url: URL.createObjectURL(blob),
+        name,
+        size: blob.size,
+        action,
+        legacyCleartextName: action === "decrypt" ? response.filenameWasEncrypted === false : undefined,
+      });
       setPassword("");
       setConfirmation("");
     } catch (reason) {
@@ -172,6 +193,12 @@ export function FileEncryption() {
         <div className="mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
           <p className="font-semibold">{result.action === "encrypt" ? "Encrypted file ready" : "Decrypted file ready"}</p>
           <p className="mt-1 text-sm text-muted-foreground">{result.name} · {formatByteSize(result.size)}</p>
+          {result.legacyCleartextName && (
+            <p className="mt-3 text-sm leading-6">
+              This container used the older NoTrak v1 format, which stored the original filename in readable form
+              alongside the encrypted contents. Encrypt the file again to produce a v2 container that hides the name too.
+            </p>
+          )}
           <Button className="mt-4 h-10 px-4" nativeButton={false} render={<a href={result.url} download={result.name} />}>
             <Download aria-hidden="true" /> Download file
           </Button>
@@ -180,7 +207,9 @@ export function FileEncryption() {
 
       <p className="mt-4 min-h-5 text-sm text-destructive" role="alert" aria-live="polite">{message}</p>
       <div className="mt-2 rounded-xl bg-muted/70 p-4 text-xs leading-5 text-muted-foreground">
-        Format: NoTrak v1 · AES-256-GCM · PBKDF2-HMAC-SHA-256 · 600,000 iterations. The encrypted file authenticates its contents and original filename.
+        Format: NoTrak v2 · AES-256-GCM · PBKDF2-HMAC-SHA-256 · 600,000 iterations. The container encrypts both the file
+        contents and the original filename, so neither is readable without the password. Files written by the older v1
+        format still decrypt, but they exposed the filename.
       </div>
     </div>
   );

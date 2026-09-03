@@ -13,6 +13,7 @@ import {
   getAlphabetSize,
   type PasswordOptions,
 } from "@/lib/security/password";
+import { COPY_FALLBACK_MESSAGE, copyToClipboard } from "@/lib/clipboard";
 
 const initialOptions: PasswordOptions = {
   length: 20,
@@ -70,7 +71,10 @@ export function PasswordGenerator() {
 
   async function copyPassword() {
     if (!password) return;
-    await navigator.clipboard.writeText(password);
+    if (!(await copyToClipboard(password))) {
+      setMessage(COPY_FALLBACK_MESSAGE);
+      return;
+    }
     setMessage("Copied to clipboard.");
     window.setTimeout(() => setMessage(""), 1800);
   }

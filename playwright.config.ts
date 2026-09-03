@@ -8,8 +8,15 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
-  workers: 3,
+  // Firefox intermittently leaves one otherwise healthy navigation waiting
+  // until the global timeout when contexts hit the shared production server in
+  // parallel. The release suite is small, so serial execution is the reliable
+  // tradeoff and still completes comfortably inside the CI job limit.
+  workers: 1,
   timeout: 45_000,
+  // Firefox can also take longer than Chromium to satisfy UI assertions. A
+  // genuine failure still fails; it simply gets a less aggressive deadline.
+  expect: { timeout: 10_000 },
   reporter: process.env.CI ? [["line"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL,

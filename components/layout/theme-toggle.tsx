@@ -1,49 +1,105 @@
 "use client";
 
-import { useEffect } from "react";
-import { Moon, Sun } from "lucide-react";
+import { useCallback, useSyncExternalStore } from "react";
+import { Monitor, Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-
-const themeStorageKey = "notrak-theme";
+import {
+  THEME_STORAGE_KEY,
+  nextThemePreference,
+  parseThemePreference,
+  resolveDarkMode,
+  themeToggleLabel,
+  type ThemePreference,
+} from "@/lib/theme";
 
 function applyTheme(dark: boolean) {
   document.documentElement.classList.toggle("dark", dark);
   document.documentElement.style.colorScheme = dark ? "dark" : "light";
 }
 
+function systemPrefersDark() {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+// The preference lives in localStorage, which React cannot observe on its own.
+// A tiny store keeps the control in sync with this tab's writes, another tab's
+// writes, and the OS setting changing underneath a "system" preference.
+const listeners = new Set<() => void>();
+
+function emit() {
+  for (const listener of listeners) listener();
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+  const onSystemChange = () => {
+    if (readPreference() === "system") applyTheme(mediaQuery.matches);
+    listener();
+  };
+  const onStorage = (event: StorageEvent) => {
+    if (event.key !== THEME_STORAGE_KEY && event.key !== null) return;
+    applyTheme(resolveDarkMode(readPreference(), mediaQuery.matches));
+    listener();
+  };
+
+  mediaQuery.addEventListener("change", onSystemChange);
+  window.addEventListener("storage", onStorage);
+
+  return () => {
+    listeners.delete(listener);
+    mediaQuery.removeEventListener("change", onSystemChange);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
+function readPreference(): ThemePreference {
+  try {
+    return parseThemePreference(window.localStorage.getItem(THEME_STORAGE_KEY));
+  } catch {
+    return "system";
+  }
+}
+
+function writePreference(preference: ThemePreference) {
+  try {
+    // System is stored as absence, so an explicit override can be undone.
+    if (preference === "system") window.localStorage.removeItem(THEME_STORAGE_KEY);
+    else window.localStorage.setItem(THEME_STORAGE_KEY, preference);
+  } catch {
+    // A browser blocking storage still gets the theme for this page view.
+  }
+  emit();
+}
+
+/** The server has no storage to read, and the pre-paint script owns first paint. */
+function getServerSnapshot(): ThemePreference {
+  return "system";
+}
+
+const icons: Record<ThemePreference, typeof Monitor> = {
+  system: Monitor,
+  light: Sun,
+  dark: Moon,
+};
+
 export function ThemeToggle() {
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const preference = useSyncExternalStore(subscribe, readPreference, getServerSnapshot);
 
-    const syncTheme = () => {
-      const storedTheme = window.localStorage.getItem(themeStorageKey);
-      if (!storedTheme) applyTheme(mediaQuery.matches);
-    };
-
-    mediaQuery.addEventListener("change", syncTheme);
-
-    return () => mediaQuery.removeEventListener("change", syncTheme);
+  const cycleTheme = useCallback(() => {
+    const next = nextThemePreference(readPreference());
+    writePreference(next);
+    applyTheme(resolveDarkMode(next, systemPrefersDark()));
   }, []);
 
-  function toggleTheme() {
-    const dark = !document.documentElement.classList.contains("dark");
-    applyTheme(dark);
-    window.localStorage.setItem(themeStorageKey, dark ? "dark" : "light");
-  }
+  const Icon = icons[preference];
 
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      onClick={toggleTheme}
-      title="Toggle color theme"
-    >
-      <Sun className="hidden size-4 dark:block" aria-hidden="true" />
-      <Moon className="size-4 dark:hidden" aria-hidden="true" />
-      <span className="sr-only dark:hidden">Switch to dark theme</span>
-      <span className="sr-only hidden dark:inline">Switch to light theme</span>
+    <Button type="button" variant="ghost" size="icon" onClick={cycleTheme}>
+      <Icon className="size-4" aria-hidden="true" />
+      <span className="sr-only">{themeToggleLabel(preference)}</span>
     </Button>
   );
 }

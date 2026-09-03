@@ -73,6 +73,107 @@ export function latencyJitter(values: readonly number[], minimumSamples: number)
   return totalDifference / (samples.length - 1);
 }
 
+export type SpeedQualityLevel = "complete" | "partial" | "variable";
+
+export type SpeedQuality = {
+  level: SpeedQualityLevel;
+  /** Plain-language explanations, most important first. */
+  reasons: string[];
+};
+
+export type SpeedQualityInput = {
+  summary: SpeedSummary;
+  downloadSamples: readonly number[];
+  uploadSamples: readonly number[];
+  latencySamples: readonly number[];
+  /** Measurements the engine reported as failed. */
+  measurementErrors: number;
+};
+
+// Above this relative spread the samples disagree enough that a single headline
+// number would overstate the precision of the result.
+const UNSTABLE_BANDWIDTH_SPREAD = 0.35;
+const UNSTABLE_LATENCY_SPREAD = 0.5;
+
+/**
+ * Interquartile range divided by the median: a spread measure that is not
+ * dragged around by one outlier the way a standard deviation is. Returns
+ * undefined when there are too few samples to say anything.
+ */
+export function relativeSpread(values: readonly number[]) {
+  const samples = finitePositiveValues(values);
+  if (samples.length < 4) return undefined;
+
+  const sorted = [...samples].sort((left, right) => left - right);
+  const median = percentile(sorted, 0.5);
+  if (median <= 0) return undefined;
+
+  return (percentile(sorted, 0.75) - percentile(sorted, 0.25)) / median;
+}
+
+export function assessSpeedQuality(input: SpeedQualityInput): SpeedQuality {
+  const { summary, downloadSamples, uploadSamples, latencySamples, measurementErrors } = input;
+
+  const missing = (
+    [
+      ["download speed", summary.download],
+      ["upload speed", summary.upload],
+      ["latency", summary.latency],
+      ["jitter", summary.jitter],
+      ["loaded download latency", summary.downLoadedLatency],
+      ["loaded upload latency", summary.upLoadedLatency],
+    ] as const
+  )
+    .filter(([, value]) => value === undefined)
+    .map(([label]) => label);
+
+  if (missing.length > 0 || measurementErrors > 0) {
+    const reasons: string[] = [];
+    if (missing.length > 0) {
+      reasons.push(
+        `The browser did not produce enough valid samples for ${missing.join(", ")}. Those values are shown as an em dash rather than guessed.`,
+      );
+    }
+    if (measurementErrors > 0) {
+      reasons.push(
+        `${measurementErrors} ${measurementErrors === 1 ? "measurement" : "measurements"} could not be completed. The values that did arrive are still shown.`,
+      );
+    }
+    return { level: "partial", reasons };
+  }
+
+  const reasons: string[] = [];
+  const downloadSpread = relativeSpread(downloadSamples);
+  const uploadSpread = relativeSpread(uploadSamples);
+  const latencySpread = relativeSpread(latencySamples);
+
+  if (downloadSpread !== undefined && downloadSpread > UNSTABLE_BANDWIDTH_SPREAD) {
+    reasons.push("Download samples varied widely, so the real speed is probably a range rather than one number.");
+  }
+  if (uploadSpread !== undefined && uploadSpread > UNSTABLE_BANDWIDTH_SPREAD) {
+    reasons.push("Upload samples varied widely, which is common on Wi-Fi and mobile connections.");
+  }
+  if (latencySpread !== undefined && latencySpread > UNSTABLE_LATENCY_SPREAD) {
+    reasons.push("Latency drifted between probes, which usually means competing traffic or an unstable link.");
+  }
+
+  if (reasons.length > 0) {
+    reasons.push("Run the test again on a wired connection, or repeat it a few times and compare.");
+    return { level: "variable", reasons };
+  }
+
+  return {
+    level: "complete",
+    reasons: ["Every measurement returned enough consistent samples. Results are still estimates, not laboratory figures."],
+  };
+}
+
+export function speedQualityLabel(level: SpeedQualityLevel) {
+  if (level === "complete") return "Complete measurement";
+  if (level === "variable") return "Complete but variable";
+  return "Partial measurement";
+}
+
 export function formatMbps(bitsPerSecond?: number) {
   if (bitsPerSecond === undefined || !Number.isFinite(bitsPerSecond)) return "—";
   return (bitsPerSecond / 1_000_000).toFixed(bitsPerSecond >= 100_000_000 ? 0 : 1);

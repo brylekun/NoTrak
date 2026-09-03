@@ -8,7 +8,7 @@ export function SiteFooter() {
         <div className="flex items-center gap-4">
           <Link href="/methodology" className="hover:text-foreground">Methodology</Link>
           <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
-          <Link href="/#tools" className="hover:text-foreground">All tools</Link>
+          <Link href="/tools" className="hover:text-foreground">All tools</Link>
         </div>
       </div>
     </footer>

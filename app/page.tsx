@@ -1,31 +1,12 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  Braces,
-  Fingerprint,
-  KeyRound,
-  Link2Off,
-  LockKeyhole,
-  ScanSearch,
-  Sparkles,
-} from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
-import { featuredTools, toolRegistry } from "@/lib/tools/registry";
-
-const toolIcons = {
-  fingerprint: Fingerprint,
-  key: KeyRound,
-  "link-off": Link2Off,
-  braces: Braces,
-  lock: LockKeyhole,
-  scan: ScanSearch,
-} as const;
+import { ToolCard } from "@/components/tool-card";
+import { featuredTools, readyTools } from "@/lib/tools/registry";
 
 export default function Home() {
-  const upcomingTools = toolRegistry.filter((tool) => tool.status === "planned").slice(0, 3);
-
   return (
     <div className="min-h-screen overflow-hidden">
       <SiteHeader />
@@ -85,60 +66,31 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-3">
-            {featuredTools.map((tool, index) => {
-              const Icon = toolIcons[tool.icon];
-              return (
-                <Link key={tool.slug} href={`/tools/${tool.slug}`} className="tool-card group">
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="tool-icon">
-                      <Icon className="size-5" aria-hidden="true" />
-                    </span>
-                    <span className="text-xs font-medium text-muted-foreground">{String(index + 1).padStart(2, "0")}</span>
-                  </div>
-                  <div className="mt-8">
-                    <span className={tool.mode === "local" ? "mode-local" : "mode-external"}>
-                      {tool.mode === "local" ? "Processed locally" : "External lookup"}
-                    </span>
-                    <h3 className="mt-3 text-xl font-semibold tracking-[-0.025em]">{tool.name}</h3>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{tool.description}</p>
-                  </div>
-                  <div className="mt-7 flex items-center gap-2 text-sm font-semibold text-primary">
-                    Open tool
-                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-                  </div>
-                </Link>
-              );
-            })}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredTools.map((tool, index) => (
+              <ToolCard key={tool.slug} tool={tool} index={index} />
+            ))}
           </div>
 
-          {upcomingTools.length > 0 && <div className="mt-12 border-t border-border/70 pt-8">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="eyebrow">Coming next</p>
-                <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em]">More tools, same privacy rules</h2>
-              </div>
-              <span className="hidden rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground sm:inline-flex">
-                {toolRegistry.length} tools in the roadmap
-              </span>
+          <div className="mt-12 flex flex-col gap-4 rounded-3xl border border-border/80 bg-card/60 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+            <div>
+              <p className="eyebrow">The full toolkit</p>
+              <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em]">
+                {readyTools.length} tools, same privacy rules
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+                Hashing, encryption, image and PDF cleanup, QR codes, reputation checks, and developer utilities. Search
+                or filter by category.
+              </p>
             </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {upcomingTools.map((tool) => {
-                const Icon = toolIcons[tool.icon];
-                return (
-                  <div key={tool.slug} className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card/60 p-4">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground">
-                      <Icon className="size-4" aria-hidden="true" />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold">{tool.name}</p>
-                      <p className="text-xs text-muted-foreground">{tool.category}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>}
+            <Link
+              href="/tools"
+              className="group inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+            >
+              Browse all tools
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />
+            </Link>
+          </div>
         </section>
       </main>
 

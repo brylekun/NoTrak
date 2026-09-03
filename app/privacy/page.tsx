@@ -18,7 +18,7 @@ const principles = [
   {
     icon: Server,
     title: "No NoTrak database",
-    body: "NoTrak has no accounts, profiles, saved tool history, or application database. Sensitive tool inputs are not stored in browser storage. Only your harmless light or dark theme preference is saved locally.",
+    body: "NoTrak has no accounts, profiles, saved tool history, or application database. Sensitive tool inputs are not stored in browser storage. The only things saved locally are your light or dark theme choice and a copy of NoTrak's own pages for offline use.",
   },
   {
     icon: Cloud,
@@ -64,6 +64,19 @@ export default function PrivacyPage() {
                   </li>
                 ))}
               </ul>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold tracking-[-0.03em]">What is stored on your device</h2>
+              <p className="mt-5 text-sm leading-6 text-muted-foreground">
+                NoTrak saves an explicit light or dark preference under a single local key. Choosing
+                &ldquo;system&rdquo; removes that key so the site follows your device again.
+              </p>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                NoTrak also installs a service worker that keeps a copy of its own pages, styles, scripts, and icons in
+                your browser&rsquo;s cache so local tools keep working without a network. Only NoTrak&rsquo;s own files
+                are stored. Nothing you type, select, generate, or upload is ever placed there, and the IP and
+                reputation lookups are explicitly excluded from caching. Clearing site data removes all of it.
+              </p>
             </section>
             <section>
               <h2 className="text-xl font-semibold tracking-[-0.03em]">Necessary network information</h2>

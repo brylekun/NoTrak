@@ -20,7 +20,7 @@ export function JwtDecoder() {
 
   return (
     <div>
-      <div className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4 text-sm leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950/35 dark:text-amber-200"><strong>Decoding is not verification.</strong> Anyone can construct a token payload. NoTrak does not validate its signature, issuer, audience, or trustworthiness.</div>
+      <div className="callout-warning"><strong>Decoding is not verification.</strong> Anyone can construct a token payload. NoTrak does not validate its signature, issuer, audience, or trustworthiness.</div>
       <label htmlFor="jwt-token" className="mt-6 block text-sm font-semibold">Compact JWT</label>
       <Textarea id="jwt-token" className="mt-2 min-h-36 break-all font-mono text-sm" value={token} onChange={(event) => { setToken(event.target.value); setResult(null); setMessage(""); }} placeholder="eyJhbGciOi..." spellCheck={false} />
       <div className="mt-5 flex flex-wrap gap-2"><Button className="h-10 px-4" onClick={decode}><Braces />Decode locally</Button>{(token || result) && <Button className="h-10 px-4" variant="outline" onClick={reset}><RotateCcw />Reset</Button>}</div>

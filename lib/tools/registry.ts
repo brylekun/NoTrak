@@ -2,15 +2,19 @@ export type ToolMode = "local" | "external-lookup";
 export type ToolStatus = "ready" | "planned";
 export type ToolIcon = "fingerprint" | "key" | "link-off" | "braces" | "lock" | "scan";
 
+export type ToolCategory = "Network" | "Privacy" | "Security" | "Files" | "Developer";
+
 export type ToolDefinition = {
   slug: string;
   name: string;
   description: string;
-  category: "Network" | "Privacy" | "Security" | "Files" | "Developer";
+  category: ToolCategory;
   mode: ToolMode;
   status: ToolStatus;
   icon: ToolIcon;
   privacyNotice: string;
+  /** Surfaced on the homepage. The full set always lives at /tools. */
+  featured?: boolean;
 };
 
 export const toolRegistry: ToolDefinition[] = [
@@ -23,6 +27,7 @@ export const toolRegistry: ToolDefinition[] = [
     status: "ready",
     icon: "fingerprint",
     privacyNotice: "Your request IP is read once to return this result. No application history is saved.",
+    featured: true,
   },
   {
     slug: "password-generator",
@@ -33,6 +38,7 @@ export const toolRegistry: ToolDefinition[] = [
     status: "ready",
     icon: "key",
     privacyNotice: "Generated entirely in your browser. Your password never leaves this device.",
+    featured: true,
   },
   {
     slug: "tracking-url-cleaner",
@@ -43,6 +49,7 @@ export const toolRegistry: ToolDefinition[] = [
     status: "ready",
     icon: "link-off",
     privacyNotice: "Cleaned entirely in your browser. The submitted link is never opened or sent to NoTrak.",
+    featured: true,
   },
   {
     slug: "hash-generator",
@@ -85,6 +92,17 @@ export const toolRegistry: ToolDefinition[] = [
     privacyNotice: "QR content is processed only in your browser.",
   },
   {
+    slug: "exif-viewer",
+    name: "EXIF Viewer",
+    description: "See the camera, timestamp, and location data hidden inside a photo.",
+    category: "Privacy",
+    mode: "local",
+    status: "ready",
+    icon: "scan",
+    privacyNotice: "The image is read only in your browser. Coordinates are never sent to a map service.",
+    featured: true,
+  },
+  {
     slug: "remove-exif",
     name: "EXIF Remover",
     description: "Create a clean image copy without embedded camera metadata.",
@@ -93,6 +111,7 @@ export const toolRegistry: ToolDefinition[] = [
     status: "ready",
     icon: "scan",
     privacyNotice: "Images are read and rewritten only on your device.",
+    featured: true,
   },
   {
     slug: "image-compressor",
@@ -113,6 +132,7 @@ export const toolRegistry: ToolDefinition[] = [
     status: "ready",
     icon: "lock",
     privacyNotice: "Files, passwords, and keys never leave your browser.",
+    featured: true,
   },
   {
     slug: "browser-privacy",
@@ -185,6 +205,36 @@ export const toolRegistry: ToolDefinition[] = [
     privacyNotice: "Images are converted only in your browser.",
   },
   {
+    slug: "base64-converter",
+    name: "Base64 Converter",
+    description: "Encode text to Base64 or decode it back, including the URL-safe alphabet.",
+    category: "Developer",
+    mode: "local",
+    status: "ready",
+    icon: "braces",
+    privacyNotice: "Encoded and decoded entirely in your browser.",
+  },
+  {
+    slug: "json-formatter",
+    name: "JSON Formatter",
+    description: "Format, minify, and validate JSON with the exact error location.",
+    category: "Developer",
+    mode: "local",
+    status: "ready",
+    icon: "braces",
+    privacyNotice: "Parsed only in your browser. A pasted payload is never sent anywhere.",
+  },
+  {
+    slug: "text-encryption",
+    name: "Text Encryption",
+    description: "Encrypt a message into a pasteable block, and decrypt one you receive.",
+    category: "Security",
+    mode: "local",
+    status: "ready",
+    icon: "lock",
+    privacyNotice: "The message, password, and derived key never leave your browser.",
+  },
+  {
     slug: "jwt-decoder",
     name: "JWT Decoder",
     description: "Inspect token headers and payloads without pretending to verify a signature.",
@@ -196,7 +246,11 @@ export const toolRegistry: ToolDefinition[] = [
   },
 ];
 
-export const featuredTools = toolRegistry.filter((tool) => tool.status === "ready");
+export const toolCategories: ToolCategory[] = ["Network", "Privacy", "Security", "Files", "Developer"];
+
+export const readyTools = toolRegistry.filter((tool) => tool.status === "ready");
+
+export const featuredTools = readyTools.filter((tool) => tool.featured);
 
 export function getTool(slug: string) {
   return toolRegistry.find((tool) => tool.slug === slug);

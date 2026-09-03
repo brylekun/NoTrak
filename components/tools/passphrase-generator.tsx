@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { estimatePassphraseEntropy, generatePassphrase, type PassphraseOptions } from "@/lib/security/passphrase";
+import { COPY_FALLBACK_MESSAGE, copyToClipboard } from "@/lib/clipboard";
 
 const initialOptions: PassphraseOptions = {
   wordCount: 8,
@@ -36,7 +37,10 @@ export function PassphraseGenerator() {
   }, [generate]);
 
   async function copy() {
-    await navigator.clipboard.writeText(passphrase);
+    if (!(await copyToClipboard(passphrase))) {
+      setMessage(COPY_FALLBACK_MESSAGE);
+      return;
+    }
     setMessage("Passphrase copied.");
     window.setTimeout(() => setMessage(""), 1800);
   }

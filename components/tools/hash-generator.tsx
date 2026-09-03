@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatByteSize, HASH_ALGORITHMS, hashText, type HashAlgorithm } from "@/lib/crypto/hash";
+import { COPY_FALLBACK_MESSAGE, copyToClipboard } from "@/lib/clipboard";
 
 const MAX_HASH_BYTES = 256 * 1024 * 1024;
 
@@ -71,7 +72,10 @@ export function HashGenerator() {
 
   async function copyDigest() {
     if (!digest) return;
-    await navigator.clipboard.writeText(digest);
+    if (!(await copyToClipboard(digest))) {
+      setMessage(COPY_FALLBACK_MESSAGE);
+      return;
+    }
     setMessage("Hash copied.");
     window.setTimeout(() => setMessage(""), 1800);
   }

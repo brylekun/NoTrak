@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Eye, RefreshCw, ShieldAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { assessExposure, privacyRecommendations, type BrowserPrivacySnapshot } from "@/lib/privacy/browser-privacy";
+import { assessExposure, privacyRecommendations, type BrowserPrivacySnapshot, type SurfaceId } from "@/lib/privacy/browser-privacy";
 
 type ExtendedNavigator = Navigator & { globalPrivacyControl?: boolean; deviceMemory?: number };
 
@@ -38,24 +38,30 @@ export function BrowserPrivacyCheck() {
   }
 
   const assessment = snapshot ? assessExposure(snapshot) : null;
-  const rows = snapshot ? [
-    ["Global Privacy Control", preference(snapshot.globalPrivacyControl)],
-    ["Do Not Track", preference(snapshot.doNotTrack)],
-    ["Cookies", snapshot.cookiesEnabled ? "Enabled" : "Disabled"],
-    ["Language", snapshot.language],
-    ["Timezone", snapshot.timezone],
-    ["Screen", `${snapshot.screen}, ${snapshot.colorDepth}-bit color`],
-    ["CPU hint", snapshot.hardwareConcurrency ? `${snapshot.hardwareConcurrency} logical cores` : "Not reported"],
-    ["Memory hint", snapshot.deviceMemory ? `${snapshot.deviceMemory} GB` : "Not reported"],
-    ["Touch points", snapshot.touchPoints.toString()],
-    ["WebRTC", snapshot.webRtcAvailable ? "Available" : "Unavailable"],
-    ["Canvas", snapshot.canvasAvailable ? "Available" : "Unavailable"],
-    ["Browser identifier", snapshot.userAgent],
+  const exposedById = new Map<SurfaceId, boolean>(
+    assessment?.surfaces.map((surface) => [surface.id, surface.exposed]) ?? [],
+  );
+
+  type Row = { label: string; value: string; surface?: SurfaceId };
+  const rows: Row[] = snapshot ? [
+    { label: "Global Privacy Control", value: preference(snapshot.globalPrivacyControl) },
+    { label: "Do Not Track", value: preference(snapshot.doNotTrack) },
+    { label: "Cookies", value: snapshot.cookiesEnabled ? "Enabled" : "Disabled", surface: "cookies" },
+    { label: "Language", value: snapshot.language, surface: "language" },
+    { label: "Timezone", value: snapshot.timezone, surface: "timezone" },
+    { label: "Screen", value: snapshot.screen, surface: "screen" },
+    { label: "Color depth", value: snapshot.colorDepth > 0 ? `${snapshot.colorDepth}-bit` : "Not reported", surface: "colorDepth" },
+    { label: "CPU hint", value: snapshot.hardwareConcurrency ? `${snapshot.hardwareConcurrency} logical cores` : "Not reported", surface: "hardwareConcurrency" },
+    { label: "Memory hint", value: snapshot.deviceMemory ? `${snapshot.deviceMemory} GB` : "Not reported", surface: "deviceMemory" },
+    { label: "Touch points", value: snapshot.touchPoints.toString(), surface: "touchPoints" },
+    { label: "WebRTC", value: snapshot.webRtcAvailable ? "Available" : "Unavailable", surface: "webRtc" },
+    { label: "Canvas", value: snapshot.canvasAvailable ? "Available" : "Unavailable", surface: "canvas" },
+    { label: "Browser identifier", value: snapshot.userAgent, surface: "userAgent" },
   ] : [];
 
   return (
     <div>
-      <div className="rounded-2xl border border-border/70 bg-muted/45 p-4 text-sm leading-6 text-muted-foreground">
+      <div className="callout-neutral">
         This check shows information any ordinary webpage can read after you open it. It does not identify trackers, test third-party cookies, or prove that you are anonymous.
       </div>
 
@@ -70,19 +76,36 @@ export function BrowserPrivacyCheck() {
             <div className="flex items-start gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary"><ShieldAlert /></span>
               <div>
-                <p className="font-semibold capitalize">{assessment.level} observable surface</p>
-                <p className="mt-1 text-sm leading-6 text-muted-foreground">{assessment.score} of 10 common fingerprinting signals were available after accounting for reported privacy preferences.</p>
+                <p className="font-semibold capitalize">{assessment.level} browser exposure</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  {assessment.exposedCount} of {assessment.maxScore} common browser surfaces were exposed or enabled.
+                  {assessment.protections > 0
+                    ? ` Your browser sends ${assessment.protections === 2 ? "both tracking preferences" : "a tracking preference"}, which lowers the score to ${assessment.score}.`
+                    : " No protective tracking preference was enabled, so nothing was deducted."}
+                </p>
               </div>
             </div>
           </div>
 
           <dl className="mt-5 divide-y divide-border/70 overflow-hidden rounded-2xl border border-border/70">
-            {rows.map(([label, value]) => (
-              <div key={label} className="grid gap-1 px-4 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">
-                <dt className="text-sm font-semibold">{label}</dt>
-                <dd className="break-words text-sm text-muted-foreground">{value}</dd>
-              </div>
-            ))}
+            {rows.map(({ label, value, surface }) => {
+              const exposed = surface ? exposedById.get(surface) : undefined;
+              return (
+                <div key={label} className="grid gap-1 px-4 py-3 sm:grid-cols-[11rem_1fr_6.5rem] sm:items-baseline sm:gap-4">
+                  <dt className="text-sm font-semibold">{label}</dt>
+                  <dd className="break-words text-sm text-muted-foreground">{value}</dd>
+                  {exposed === undefined ? (
+                    <dd className="text-xs text-muted-foreground sm:text-right">—</dd>
+                  ) : (
+                    <dd className="sm:text-right">
+                      <span className={exposed ? "surface-exposed" : "surface-withheld"}>
+                        {exposed ? "Exposed" : "Reduced"}
+                      </span>
+                    </dd>
+                  )}
+                </div>
+              );
+            })}
           </dl>
 
           <div className="mt-5">

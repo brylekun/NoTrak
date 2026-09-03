@@ -47,8 +47,16 @@ The browser must calculate a selected file's SHA-256 digest before a malware loo
 app/
   layout.tsx
   page.tsx
+  manifest.ts                       # installable PWA manifest
+  offline/page.tsx                  # service-worker navigation fallback
+  error.tsx                         # route-level boundary; never renders error detail
+  global-error.tsx                  # root-layout fallback with its own <html>
+  not-found.tsx
+  sitemap.ts                        # generated from the registry
+  robots.ts
   privacy/page.tsx
   tools/
+    page.tsx                        # searchable, category-filtered index
     [slug]/page.tsx                 # optional registry-driven shared route
     whats-my-ip/page.tsx
     speed-test/page.tsx
@@ -73,11 +81,21 @@ components/
   layout/
   tool-shell.tsx
   tool-card.tsx
+  tool-browser.tsx                 # client search/filter for the tools index
   privacy-notice.tsx
   result-state.tsx
   ui/                              # shadcn/ui components
 lib/
+  site.ts                          # single resolved public origin
+  clipboard.ts                     # clipboard writes with a definite outcome
+  theme.ts                         # three-state preference; absent means system
   tools/registry.ts
+  tools/icons.ts
+  tools/metadata.ts
+  images/metadata.ts               # JPEG/PNG/WebP metadata container detection
+  images/exif.ts                   # grouped EXIF report, location flagged
+  security/provider-status.ts      # failure taxonomy and its wording
+  security/client.ts               # normalized API errors for the browser
   crypto/
   images/
   pdf/
@@ -91,7 +109,7 @@ tests/
   e2e/
 ```
 
-`lib/tools/registry.ts` is the single source of truth for each tool's slug, name, description, category, processing mode (`local` or `external-lookup`), status, and privacy notice. Use it to populate navigation, homepage cards, and metadata.
+`lib/tools/registry.ts` is the single source of truth for each tool's slug, name, description, category, processing mode (`local` or `external-lookup`), status, privacy notice, and optional `featured` flag. Use it to populate navigation, the `/tools` index and its category filter, homepage cards, per-page metadata, and `sitemap.xml`. `lib/site.ts` resolves the single public origin used for canonical URLs, social cards, the sitemap, and robots.
 
 ## 5. Tool roadmap
 
@@ -123,7 +141,35 @@ tests/
 | UUID Generator | Browser | Use `crypto.randomUUID()` with a compatible fallback if required |
 | JWT Decoder | Browser | Decode only; clearly state that decoding does not verify a signature |
 
-Possible later local-only additions: EXIF viewer, image resizer, Base64 encoder/decoder, JSON formatter, text encryption, user-agent analyzer, username generator, and synthetic test identity generator.
+### V1.2 — Experience and reliability
+
+V1.2 is primarily a quality release. It strengthens the existing 18 tools and adds four local-only utilities without expanding NoTrak's privacy boundary beyond the browser.
+
+| Workstream | Scope | Acceptance boundary |
+|---|---|---|
+| Light and dark themes | System-aware initial theme, accessible manual toggle, locally persisted preference, and a cohesive NoTrak palette | No initial theme flash; both themes remain readable across the homepage, tool shells, forms, results, warnings, and downloads |
+| Tool discovery | A dedicated `/tools` index with category filtering and search, plus a curated homepage subset | Every released tool is reachable and filterable; the homepage stays scannable as the toolkit grows |
+| Discoverability | `metadataBase`, canonical URLs, social cards, `sitemap.xml`, and `robots.txt` generated from the registry | Each released tool page is individually indexable and a new tool appears in the sitemap without manual edits |
+| Failure and recovery surfaces | Route-level error boundary, root boundary, 404 page, and definite clipboard outcomes | A thrown tool error or blocked browser API produces NoTrak-framed guidance rather than a silent no-op or a default error screen |
+| External-lookup resilience | Clear rate-limit, quota, timeout, authentication, and provider-outage states | Failures never become a `safe` result, reveal upstream details, or disable available local analysis |
+| Speed Test confidence | Explain unstable samples and distinguish complete, partial, and variable measurements | Results do not imply laboratory precision and remain useful when a browser or network produces incomplete samples |
+| Accessibility and responsive QA | Keyboard, focus, screen-reader status, contrast, reduced-motion, zoom, and mobile checks | All released pages meet the agreed accessibility target without horizontal overflow or color-only meaning |
+| Release regression coverage | Expand browser tests around themes, reset/error paths, local-only network boundaries, and representative downloads | CI catches privacy, accessibility, responsive-layout, and critical workflow regressions before promotion |
+| Offline availability | Installable manifest and a service worker that caches only NoTrak's own pages and assets | Local tools keep working with the network off; no tool input and no `/api` response is ever cached |
+| Correctness of privacy claims | Every scored or verified claim must be backed by what the code actually measures | A displayed score responds to real changes; a "verified" or "protected" claim is proven by a test |
+
+Implementation status: implemented — the system-aware three-state theme, the `/tools` index, registry-driven SEO surfaces, the error/404/root boundaries, shared disclosure callouts, the reduced-motion guard, HSTS, the external-lookup failure taxonomy, the Speed Test confidence rating, offline support, the honest exposure score, encrypted-filename containers, container-aware image metadata detection, the expanded tracking-parameter rules, batch image cleaning with drag-and-drop, and four new local tools. Pending: the full manual accessibility audit (keyboard, screen reader, 200% zoom, physical devices) and the nonce-based CSP, which is deferred by decision — see below.
+
+V1.2 also adds four local-only tools, bringing the released set to 22:
+
+| Tool | Processing | Notes |
+|---|---|---|
+| EXIF Viewer | Browser | Shows camera, timestamp, and GPS data; coordinates are never sent to a map service |
+| Base64 Converter | Browser | Standard and URL-safe alphabets; states plainly that Base64 is not encryption |
+| JSON Formatter | Browser | Format, minify, sort keys, and report the error location without echoing the document |
+| Text Encryption | Browser | AES-256-GCM with a pasteable armored block, reusing the file container's primitives |
+
+Possible later local-only additions: image resizer, user-agent analyzer, username generator, and synthetic test identity generator.
 
 ## 6. API contracts
 
@@ -187,7 +233,10 @@ Create `.env.example` with names only:
 GOOGLE_SAFE_BROWSING_API_KEY=
 MALWAREBAZAAR_API_KEY=
 URLHAUS_AUTH_KEY=
+NEXT_PUBLIC_SITE_URL=
 ```
+
+`NEXT_PUBLIC_SITE_URL` is the only public variable. It holds no secret and only sets the canonical origin used by metadata, `sitemap.xml`, and `robots.txt`; `lib/site.ts` falls back to the Vercel-provided domain and then to `localhost`.
 
 Only add variables actually required by the providers' current APIs. Configure secrets in Vercel for Preview and Production. Never prefix secrets with `NEXT_PUBLIC_`, expose them to client components, return them in errors, or write them to logs.
 
@@ -206,6 +255,9 @@ Only add variables actually required by the providers' current APIs. Configure s
 - Set a restrictive Content Security Policy and standard security headers; keep third-party origins limited to those required by the active tool.
 - Use `no-store` on personalized or reputation responses. Avoid application logs containing IPs, URLs, hashes, or request bodies; disclose that hosting/providers may retain operational logs under their own policies.
 - Show a standard notice on every tool: **Processed locally** or **External lookup**, with the exact data that leaves the device.
+- Encrypt filenames as well as file contents; a container's cleartext header must not reveal what was encrypted.
+- The service worker may cache only NoTrak's own pages and static assets. Never cache an `/api` response, a cross-origin request, or any response marked `no-store`.
+- A displayed score or verification must reflect what the code actually measures. Do not present a constant as a measurement, and do not claim "verified" beyond what was checked.
 - Use careful claims: `not found`/`unknown` is not `safe`; an exposure score is not proof of anonymity; IP location is approximate.
 
 ## 10. Phased implementation order
@@ -247,6 +299,38 @@ Add the repeatable release gate, production browser smoke tests, dependency audi
 
 Implementation status: repository-side release automation and documentation are implemented. Vercel linking, provider credentials, live quota validation, Firewall configuration, physical-device QA, and production promotion require operator access and remain pending until completed against a real deployment.
 
+### Phase 5 — V1.2 experience and reliability
+
+1. Add a system-aware theme with a three-state toggle (System, Light, Dark). Storing nothing means "follow the system", so an explicit override can always be undone.
+2. Add a `/tools` index that filters the registry by category and searches name and description, and reduce the homepage to a curated `featured` subset.
+3. Generate `sitemap.xml`, `robots.txt`, canonical URLs, and Open Graph/Twitter metadata from the registry and a single resolved site origin.
+4. Add `app/error.tsx`, `app/global-error.tsx`, and `app/not-found.tsx`. Never render or transmit error details, because a tool error can carry a filename, URL, or hash.
+5. Give every clipboard write a definite outcome with a manual-copy fallback, promote the repeated disclosure panels to shared `callout-*` classes, add a global `prefers-reduced-motion` guard, and send HSTS.
+6. Refine every external-lookup failure state so rate limits, quotas, timeouts, invalid credentials, and upstream outages are distinguishable and non-alarming, and never resolve to a `safe` result.
+7. Add a Speed Test result-quality rating of complete, partial, or variable, based on sample completeness and on the interquartile spread of the samples.
+8. Correct the Browser Privacy Check exposure score: count a surface only when the browser actually reveals it, so a withheld value, a disabled capability, and a zero reading all read as non-exposure.
+9. Move the original filename out of the encrypted container's cleartext header into the AES-GCM plaintext (format v2), keeping v1 readable and telling the visitor when a v1 file exposed its name.
+10. Replace the single-marker EXIF byte scan with real container parsing across JPEG marker segments, PNG chunks, and WebP RIFF chunks, and disclose that re-encoding drops the ICC profile.
+11. Expand the tracking-parameter rules with host-scoped parameters, query-shaped `#fragment` cleaning, and referral path segments.
+12. Add an installable manifest and a service worker so local tools keep working offline. Cache only NoTrak's own pages and assets; never cache an `/api` response or a cross-origin request.
+13. Add the remaining local-only tools: EXIF Viewer, Base64 Converter, JSON Formatter, and Text Encryption. Add batch processing and drag-and-drop where files are involved.
+14. Audit every released tool in light and dark themes for contrast, keyboard access, visible focus, status announcements, 200% zoom, reduced motion, and mobile layout.
+15. Run the full repository gate, protected Preview QA, physical-device checks, and human-approved Production promotion before tagging `v1.2.0`.
+
+Implementation status: steps 1–13 are implemented and verified with 207 unit tests and 36 browser-test definitions. The current Chromium and Firefox run produced 70 passes and two documented engine-specific skips. Steps 14–15 remain pending because they need physical devices, assistive technology, and a real deployment.
+
+WebKit smoke tests could not run in this environment: the host is missing `libicu74`, `libxml2`, and `libflite1`. Safari coverage needs a machine with those libraries, or CI. Two browser tests are skipped on Firefox because Playwright's Firefox build does not apply `colorScheme` emulation to `matchMedia` and its offline emulation does not block top-level navigations; both behaviours are verified on Chromium.
+
+### Deferred by decision — nonce-based Content Security Policy
+
+`script-src` still carries `'unsafe-inline'`. A nonce was implemented and measured, then reverted, because it is mutually exclusive with offline support:
+
+- Nonces require per-request rendering, so all 31 static routes became dynamic (`ƒ`) and pages were served `Cache-Control: private, no-store`.
+- The service worker refuses to cache a `no-store` response by design, so the offline test for a local tool failed and offline support was lost.
+- Experimental `sri` was tested as an alternative that preserves static rendering. It adds `integrity` to some external scripts but cannot cover Next's three inline flight scripts, so `'unsafe-inline'` remained necessary.
+
+The trade is a strict `script-src` against offline availability, CDN caching, and per-request function cost. NoTrak renders no user-supplied HTML and loads no third-party scripts, so its injected-script surface is small, while offline availability is both a headline capability and the plainest demonstration of the privacy claim. Revisit if a third-party script or user-rendered content is ever introduced.
+
 ## 11. Testing checklist
 
 ### Automated
@@ -272,7 +356,17 @@ Implementation status: repository-side release automation and documentation are 
 
 - [ ] Chrome, Firefox, Safari, and Edge current versions are tested; unsupported APIs have clear fallbacks.
 - [ ] Pages work at mobile, tablet, and desktop widths without layout shift.
+- [ ] Light and dark themes meet contrast targets, follow the initial system preference, persist an explicit override, return to following the system, and avoid an incorrect-theme flash.
+- [ ] The `/tools` index reaches every released tool, filters by category, searches by name and description, and reports result counts to assistive technology.
+- [ ] `sitemap.xml` lists every released tool page, `robots.txt` disallows `/api/`, and each tool page carries its own canonical URL.
+- [ ] Unknown routes render the NoTrak 404 page, and a thrown tool error renders the boundary without exposing a filename, URL, or hash.
+- [ ] A blocked clipboard write shows the manual-copy fallback instead of failing silently.
+- [ ] A local tool still runs with the network disabled, and no `/api` response appears in Cache Storage.
+- [ ] An encrypted container does not contain the original filename in readable form.
+- [ ] The exposure score changes when a browser capability is disabled, and can reach every band.
+- [ ] Each provider failure cause is distinguishable in the UI and none of them reads as `safe`.
 - [ ] Forms have labels, focus states, keyboard operation, screen-reader status announcements, and sufficient contrast.
+- [ ] Motion respects `prefers-reduced-motion`, and essential workflows remain usable at 200% zoom.
 - [ ] Large-file limits, memory failures, provider outages, and offline behavior produce useful non-destructive messages.
 - [ ] Lighthouse/accessibility/performance checks meet agreed thresholds on representative pages.
 
@@ -285,6 +379,7 @@ Implementation status: repository-side release automation and documentation are 
 | M2 — Local toolkit | Hash, passphrase, UUID, QR, EXIF, compression | Network audit proves processing stays local; downloads are verified |
 | M3 — V1 | Encryption, privacy check, speed test, PDF cleaner | Thirteen V1 tools pass functional, privacy, accessibility, and production checks |
 | M4 — V1.1 intelligence | URL and hash reputation tools plus remaining utilities | Provider terms/quotas are approved; failure/abuse controls and disclosures are live |
+| M5 — V1.2 quality | Theme support, tool discovery and SEO surfaces, failure boundaries, resilient provider states, Speed Test confidence, corrected privacy claims, offline support, and four new local tools | All 22 tools pass light/dark, keyboard, responsive, privacy-boundary, and protected Preview checks before production promotion |
 
 ## 13. Deployment notes
 

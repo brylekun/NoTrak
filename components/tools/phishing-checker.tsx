@@ -5,12 +5,15 @@ import { AlertTriangle, Radar, RotateCcw, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { readSecurityApiResponse, SecurityApiError } from "@/lib/security/client";
+import { getProviderStatusPresentation } from "@/lib/security/provider-status";
 import { analyzeUrlLocally, type UrlLocalAssessment } from "@/lib/security/url-risk";
 import type { UrlProviderResult } from "@/lib/security/providers";
 
 type LookupResult = {
   local: Omit<UrlLocalAssessment, "normalizedUrl">;
   providers: UrlProviderResult[];
+  complete: boolean;
   risk: { score: number; level: "low" | "caution" | "high" };
   warning: string;
 };
@@ -51,12 +54,13 @@ export function PhishingChecker() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: assessment.normalizedUrl }),
       });
-      const payload = await response.json() as LookupResult & { error?: string };
-      if (!response.ok) throw new Error(payload.error ?? "The reputation check is unavailable.");
+      const payload = await readSecurityApiResponse<LookupResult>(response);
       setResult(payload);
       setMessage("");
     } catch (reason) {
-      setMessage(reason instanceof Error ? reason.message : "The reputation check is unavailable.");
+      setMessage(reason instanceof SecurityApiError
+        ? reason.message
+        : "The reputation check could not be completed. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
@@ -67,7 +71,7 @@ export function PhishingChecker() {
 
   return (
     <div>
-      <div className="rounded-2xl border border-amber-300/60 bg-amber-50 p-4 text-sm leading-6 text-amber-950 dark:border-amber-900 dark:bg-amber-950/35 dark:text-amber-200">
+      <div className="callout-warning">
         NoTrak never opens the submitted link. If you confirm and run the check, the full URL is sent to Google Safe Browsing and URLhaus when configured. URLhaus covers malware-distribution URLs rather than phishing generally.
       </div>
       <label htmlFor="phishing-url" className="mt-6 block text-sm font-semibold">Suspicious URL</label>
@@ -98,7 +102,10 @@ export function PhishingChecker() {
               <ul className="mt-2 space-y-2">{assessment.signals.map((item) => <li key={item.id} className="rounded-xl bg-muted/60 p-3 text-sm"><strong>{item.label}.</strong> <span className="text-muted-foreground">{item.detail}</span></li>)}</ul>
             ) : <p className="mt-2 text-sm text-muted-foreground">No common structural warning signals were found.</p>}
           </div>
-          {result && <div><h2 className="text-sm font-semibold">Provider results</h2><dl className="mt-2 grid gap-2 sm:grid-cols-2">{result.providers.map((provider) => <div key={provider.provider} className="rounded-xl border border-border/70 p-3"><dt className="text-xs text-muted-foreground">{provider.provider}</dt><dd className="mt-1 text-sm font-semibold capitalize">{provider.status.replaceAll("_", " ")}</dd>{provider.threatTypes.length > 0 && <dd className="mt-1 text-xs text-destructive">{provider.threatTypes.join(", ")}</dd>}</div>)}</dl><p className="mt-3 text-xs leading-5 text-muted-foreground">{result.warning}</p></div>}
+          {result && <div><h2 className="text-sm font-semibold">Provider results</h2><dl className="mt-2 grid gap-2 sm:grid-cols-2">{result.providers.map((provider) => {
+            const presentation = getProviderStatusPresentation(provider.status);
+            return <div key={provider.provider} className="rounded-xl border border-border/70 p-3"><dt className="text-xs text-muted-foreground">{provider.provider}</dt><dd className={`mt-1 text-sm font-semibold ${provider.status === "match" ? "text-destructive" : presentation.incomplete ? "text-amber-700 dark:text-amber-300" : ""}`}>{presentation.label}</dd>{provider.threatTypes.length > 0 && <dd className="mt-1 text-xs text-destructive">{provider.threatTypes.join(", ")}</dd>}<dd className="mt-2 text-xs leading-5 text-muted-foreground">{presentation.detail}</dd></div>;
+          })}</dl><p className={`mt-3 text-xs leading-5 ${result.complete ? "text-muted-foreground" : "text-amber-700 dark:text-amber-300"}`}>{result.warning}</p></div>}
         </div>
       )}
       <p className="mt-4 min-h-5 text-sm text-destructive" role="alert" aria-live="polite">{message}</p>
