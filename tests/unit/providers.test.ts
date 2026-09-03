@@ -14,10 +14,27 @@ describe("reputation provider normalization", () => {
     expect(mock).not.toHaveBeenCalled();
   });
 
-  it("normalizes Google threat matches and provider failures", async () => {
+  it("authenticates Google requests without putting the API key in the URL", async () => {
+    const request = vi.fn(async (...args: [RequestInfo | URL, RequestInit?]) => {
+      void args;
+      return Response.json({});
+    });
+
+    await expect(queryGoogleSafeBrowsing("https://example.com", "secret-key", request as unknown as typeof fetch)).resolves.toMatchObject({ status: "not_found" });
+
+    const [input, options] = request.mock.calls[0]!;
+    const endpoint = new URL(String(input));
+    expect(endpoint.searchParams.getAll("urls")).toEqual(["https://example.com"]);
+    expect(endpoint.searchParams.has("key")).toBe(false);
+    expect(new Headers(options?.headers).get("x-goog-api-key")).toBe("secret-key");
+  });
+
+  it("normalizes Google threat matches, misses, and provider failures", async () => {
     await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ threats: [{ threatTypes: ["SOCIAL_ENGINEERING"] }] }))).resolves.toMatchObject({ status: "match", threatTypes: ["SOCIAL_ENGINEERING"] });
+    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ threats: [] }))).resolves.toMatchObject({ status: "not_found" });
+    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ cacheDuration: "300s" }))).resolves.toMatchObject({ status: "not_found" });
     await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({}, 503))).resolves.toMatchObject({ status: "unavailable" });
-    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ unexpected: true }))).resolves.toMatchObject({ status: "unavailable" });
+    await expect(queryGoogleSafeBrowsing("https://example.com", "key", fetcher({ threats: "malformed" }))).resolves.toMatchObject({ status: "unavailable" });
     const timeout = vi.fn(async () => { throw new DOMException("Timed out", "AbortError"); }) as unknown as typeof fetch;
     await expect(queryGoogleSafeBrowsing("https://example.com", "key", timeout)).resolves.toMatchObject({ status: "unavailable" });
   });

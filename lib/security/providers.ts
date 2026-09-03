@@ -26,14 +26,17 @@ export async function queryGoogleSafeBrowsing(url: string, apiKey: string | unde
   if (!apiKey) return base;
   try {
     const endpoint = new URL("https://safebrowsing.googleapis.com/v5/urls:search");
-    endpoint.searchParams.set("key", apiKey);
     endpoint.searchParams.append("urls", url);
-    const response = await fetchWithTimeout(fetcher, endpoint, { method: "GET", headers: { Accept: "application/json" } });
+    const response = await fetchWithTimeout(fetcher, endpoint, {
+      method: "GET",
+      headers: { Accept: "application/json", "x-goog-api-key": apiKey },
+    });
     if (!response.ok) return { ...base, status: "unavailable" };
-    const payload = await response.json() as { threats?: Array<{ threatTypes?: unknown }> };
-    if (!Array.isArray(payload.threats)) return { ...base, status: "unavailable" };
-    const threatTypes = payload.threats.flatMap((item) => Array.isArray(item.threatTypes) ? item.threatTypes.filter((value): value is string => typeof value === "string").slice(0, 8) : []);
-    return { ...base, status: payload.threats.length ? "match" : "not_found", threatTypes: [...new Set(threatTypes)] };
+    const payload = await response.json() as { threats?: unknown };
+    if (payload.threats !== undefined && !Array.isArray(payload.threats)) return { ...base, status: "unavailable" };
+    const threats = (payload.threats ?? []) as Array<{ threatTypes?: unknown }>;
+    const threatTypes = threats.flatMap((item) => Array.isArray(item.threatTypes) ? item.threatTypes.filter((value): value is string => typeof value === "string").slice(0, 8) : []);
+    return { ...base, status: threats.length ? "match" : "not_found", threatTypes: [...new Set(threatTypes)] };
   } catch {
     return { ...base, status: "unavailable" };
   }
