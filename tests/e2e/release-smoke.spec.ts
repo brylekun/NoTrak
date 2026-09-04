@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { PDFDocument } from "pdf-lib";
 
+import { PWNED_PASSWORDS_RANGE_URL } from "../../lib/security/password-safety";
 import { featuredTools, readyTools } from "../../lib/tools/registry";
 
 test("the homepage features a curated set and links to the full index", async ({ page }) => {
@@ -272,10 +274,218 @@ test("local phishing analysis does not call the reputation API", async ({ page }
   expect(reputationRequests).toBe(0);
 });
 
+test("password safety analysis stays local until the visitor starts the breach check", async ({ page }) => {
+  let rangeRequests = 0;
+  page.on("request", (request) => {
+    if (request.url().startsWith(PWNED_PASSWORDS_RANGE_URL)) rangeRequests += 1;
+  });
+
+  await page.goto("/tools/password-safety");
+  await page.getByLabel("Password to check").fill("password");
+  await expect(page.getByRole("heading", { name: /very weak/i })).toBeVisible();
+  await expect(page.getByText(/common-password list/i)).toBeVisible();
+  expect(rangeRequests).toBe(0);
+});
+
+test("the optional password breach check sends only a padded hash prefix", async ({ page }) => {
+  const requests: Array<{ url: string; padding: string | undefined; body: string | null }> = [];
+  await page.route(`${PWNED_PASSWORDS_RANGE_URL}/**`, async (route) => {
+    const request = route.request();
+    requests.push({
+      url: request.url(),
+      padding: request.headers()["add-padding"],
+      body: request.postData(),
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: "text/plain",
+      headers: { "Access-Control-Allow-Origin": "*" },
+      body: [
+        "1E4C9B93F3F0682250B6CF8331B7EE68FD8:3861493",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA:0",
+      ].join("\r\n"),
+    });
+  });
+
+  await page.goto("/tools/password-safety");
+  await page.getByLabel("Password to check").fill("password");
+  await page.getByRole("checkbox", { name: /five-character hash prefix/i }).check();
+  await page.getByRole("button", { name: "Check breach corpus" }).click();
+
+  await expect(page.getByRole("heading", { name: "Found in the breach corpus" })).toBeVisible();
+  await expect(page.getByText(/3,861,493 times/)).toBeVisible();
+  expect(requests).toEqual([
+    {
+      url: `${PWNED_PASSWORDS_RANGE_URL}/5BAA6`,
+      padding: "true",
+      body: null,
+    },
+  ]);
+});
+
+test("the image resizer exports exact dimensions without a processing request", async ({ page }) => {
+  const processingRequests: string[] = [];
+  await page.goto("/tools/image-resizer");
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/api/") || (url.protocol.startsWith("http") && url.origin !== "http://127.0.0.1:3100")) {
+      processingRequests.push(request.url());
+    }
+  });
+
+  await page.getByLabel("Image to resize").setInputFiles("public/icons/icon-192.png");
+  await expect(page.getByText(/icon-192\.png · 192 × 192/)).toBeVisible();
+  await page.getByLabel("Width").fill("96");
+  await expect(page.getByLabel("Height")).toHaveValue("96");
+  await page.getByRole("button", { name: "Resize image" }).click();
+
+  await expect(page.getByRole("heading", { name: "Resized copy ready" })).toBeVisible();
+  await expect(page.getByText(/96 × 96/).last()).toBeVisible();
+  await expect
+    .poll(() => page.getByAltText("Resized preview").evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight]))
+    .toEqual([96, 96]);
+  expect(processingRequests).toEqual([]);
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download resized copy" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("icon-192-resized.png");
+});
+
+test("the PDF toolkit reorders, rotates, removes, and exports pages locally", async ({ page }) => {
+  const first = await PDFDocument.create();
+  first.addPage([100, 200]);
+  first.addPage([210, 310]);
+  const second = await PDFDocument.create();
+  second.addPage([400, 500]);
+
+  const processingRequests: string[] = [];
+  await page.goto("/tools/pdf-toolkit");
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/api/") || (url.protocol.startsWith("http") && url.origin !== "http://127.0.0.1:3100")) {
+      processingRequests.push(request.url());
+    }
+  });
+
+  await page.getByLabel("PDF documents to merge or edit").setInputFiles([
+    { name: "first.pdf", mimeType: "application/pdf", buffer: Buffer.from(await first.save()) },
+    { name: "second.pdf", mimeType: "application/pdf", buffer: Buffer.from(await second.save()) },
+  ]);
+  await expect(page.getByText(/2 documents · 3 selected pages/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Rotate second.pdf, page 1 clockwise" }).click();
+  await page.getByRole("button", { name: "Move second.pdf, page 1 up" }).click();
+  await page.getByRole("button", { name: "Move second.pdf, page 1 up" }).click();
+  await page.getByRole("button", { name: "Remove first.pdf, page 1" }).click();
+  await expect(page.getByText(/2 documents · 2 selected pages/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Merge selected PDFs" }).click();
+  await expect(page.getByRole("heading", { name: "Merged PDF ready" })).toBeVisible();
+  expect(processingRequests).toEqual([]);
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download merged PDF" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("notrak-combined.pdf");
+
+  const stream = await download.createReadStream();
+  expect(stream).not.toBeNull();
+  const chunks: Buffer[] = [];
+  if (stream) for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  const output = await PDFDocument.load(Buffer.concat(chunks));
+  expect(output.getPageCount()).toBe(2);
+  expect(output.getPage(0).getSize()).toEqual({ width: 400, height: 500 });
+  expect(output.getPage(0).getRotation().angle).toBe(90);
+  expect(output.getPage(1).getSize()).toEqual({ width: 210, height: 310 });
+});
+
+test("the email header analyzer traces a spoofed message without any request", async ({ page }) => {
+  const processingRequests: string[] = [];
+  await page.goto("/tools/email-header-analyzer");
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/api/") || (url.protocol.startsWith("http") && url.origin !== "http://127.0.0.1:3100")) {
+      processingRequests.push(request.url());
+    }
+  });
+
+  await page.getByLabel("Raw email headers").fill([
+    "Received: from mx.recipient.test ([10.0.0.8])",
+    "\tby inbox.recipient.test with ESMTPS id zzz999;",
+    "\tTue, 1 Sep 2026 09:20:00 +0000",
+    "Received: from evil.test (evil.test [198.51.100.9])",
+    "\tby mx.recipient.test with ESMTP id abc123;",
+    "\tTue, 1 Sep 2026 09:14:02 +0000",
+    "Authentication-Results: mx.recipient.test; spf=fail smtp.mailfrom=evil.test;",
+    "\tdkim=fail header.d=evil.test; dmarc=fail header.from=bank.test",
+    "From: billing@bank.test <invoices@evil.test>",
+    "Reply-To: recovery@another-mailbox.test",
+    "Subject: Urgent: verify your account to avoid suspension",
+    "Message-ID: <spoof-1@evil.test>",
+  ].join("\n"));
+  await page.getByRole("button", { name: "Analyze locally" }).click();
+
+  await expect(page.getByRole("heading", { name: "Strong warning signals" })).toBeVisible();
+  await expect(page.getByText("DMARC failed")).toBeVisible();
+  await expect(page.getByText("Display name contains a different address")).toBeVisible();
+  await expect(page.getByText("Replies go to another domain")).toBeVisible();
+
+  // The chain is ordered from the earliest visible hop toward the recipient, so
+  // the public origin is hop 1 and the internal handoff is hop 2. Scoped to the
+  // hop list because the pasted block itself also contains these addresses.
+  const hops = page.getByRole("listitem").filter({ hasText: /^Hop \d/ });
+  await expect(hops.nth(0)).toContainText("198.51.100.9");
+  await expect(hops.nth(1)).toContainText("10.0.0.8 (private)");
+  await expect(hops).toHaveCount(2);
+
+  // Reported verdicts must never be presented as verification.
+  await expect(page.getByText(/does not verify a signature or query DNS/i)).toBeVisible();
+  await expect(page.getByText("A clean report is not a verdict.")).toBeVisible();
+
+  await page.getByRole("button", { name: /^Show \d+$/ }).click();
+  await expect(page.getByRole("term").filter({ hasText: /^Authentication-Results$/ })).toBeVisible();
+
+  expect(processingRequests).toEqual([]);
+});
+
+test("funding links never contact a platform on page load", async ({ page }) => {
+  const thirdPartyRequests: string[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.protocol.startsWith("http") && url.origin !== "http://127.0.0.1:3100") thirdPartyRequests.push(request.url());
+  });
+
+  // The footer appears on every page, so a badge image would leak an IP address
+  // site-wide rather than only on /support.
+  await page.goto("/", { waitUntil: "load" });
+  const footer = page.locator("footer");
+  await expect(footer.getByRole("link", { name: /GitHub Sponsors/ })).toHaveAttribute("href", "https://github.com/sponsors/brylekun");
+  await expect(footer.getByRole("link", { name: /PayPal/ })).toHaveAttribute("href", /^https:\/\/www\.paypal\.com\/donate\//);
+
+  await page.goto("/support", { waitUntil: "load" });
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Keep NoTrak free");
+  // Rendered through the Button primitive, which keeps button semantics on the
+  // underlying anchor, matching the download links elsewhere in this suite.
+  const outbound = page.getByRole("button", { name: /^Open / });
+  await expect(outbound).toHaveCount(2);
+  await expect(outbound.filter({ hasText: "GitHub Sponsors" })).toBeVisible();
+  await expect(outbound.filter({ hasText: "PayPal" })).toBeVisible();
+
+  // Outbound links must open in a new tab without handing over the referrer.
+  for (const link of await outbound.all()) {
+    await expect(link).toHaveAttribute("href", /^https:\/\//);
+    await expect(link).toHaveAttribute("target", "_blank");
+    await expect(link).toHaveAttribute("rel", /noreferrer/);
+  }
+
+  expect(thirdPartyRequests).toEqual([]);
+});
+
 test("released pages do not overflow a mobile viewport", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
 
-  for (const path of ["/", "/tools", "/privacy", "/methodology", "/offline", ...readyTools.map((tool) => `/tools/${tool.slug}`)]) {
+  for (const path of ["/", "/tools", "/privacy", "/methodology", "/support", "/offline", ...readyTools.map((tool) => `/tools/${tool.slug}`)]) {
     await page.goto(path);
     const dimensions = await page.evaluate(() => ({ client: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth }));
     expect(dimensions.scroll, `${path} has horizontal overflow`).toBeLessThanOrEqual(dimensions.client);

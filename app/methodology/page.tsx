@@ -10,12 +10,20 @@ export const metadata: Metadata = {
 
 const methods = [
   {
+    title: "Password safety",
+    body: "Local analysis estimates strength from length, character variety, predictable sequences, repeated characters, and a small built-in common-password list. It is guidance, not a precise entropy or crack-time calculation. After separate confirmation, the optional Have I Been Pwned check calculates the provider-required SHA-1 identifier in the browser, sends only its first five hexadecimal characters directly to the fixed range endpoint, requests response padding, and compares the remaining characters locally. The password and full hash never leave the browser. A not-found result does not prove that a password is safe or unique.",
+  },
+  {
     title: "URL reputation",
     body: "Before any network request, NoTrak validates the URL and checks structural signals such as raw IP hosts, Punycode, mixed scripts, unusual ports, shortening services, excessive subdomains, and suspicious wording. After explicit confirmation, the full URL is sent through a no-store API route to configured Google Safe Browsing and URLhaus services. URLhaus specifically covers malware-distribution URLs, not general phishing. NoTrak never resolves, visits, renders, or downloads the submitted destination. A provider miss is never called safe.",
   },
   {
     title: "Malware reputation",
     body: "The browser calculates the selected file’s SHA-256 digest locally. After explicit confirmation, only the 64-character digest is sent through NoTrak to MalwareBazaar; the route rejects every other request shape and cannot accept file bytes. A not-found result means only that the provider did not recognize the hash at check time.",
+  },
+  {
+    title: "Email header analysis",
+    body: "A pasted header block is unfolded and parsed entirely in the browser, and parsing stops at the blank line so a pasted message body is never read as headers. The Received chain is reversed into delivery order, from the earliest hop NoTrak can see toward the recipient, with the address each receiving server actually recorded and the gap between consecutive dated hops. SPF, DKIM, and DMARC verdicts are read from Authentication-Results as the receiving server wrote them, falling back to Received-SPF only for a method that is otherwise absent. NoTrak does not validate a signature, query DNS, or check an SPF record, so a reported pass is only as trustworthy as the block it came from, and hops a sender writes themselves can be fabricated. Domain comparisons use a small bundled two-part suffix list and always show both domains, and a Return-Path on another domain is raised only when DMARC did not pass, because sending platforms use their own bounce domain routinely. Signals are weighted and explained rather than reduced to a verdict: a message sent from a genuinely compromised account produces a clean report, so a clean report is never presented as proof of legitimacy.",
   },
   {
     title: "QR scanning and JWT decoding",
@@ -38,8 +46,12 @@ const methods = [
     body: "The browser removes standard document-information fields and catalog XMP metadata, saves a new PDF, reopens it, and verifies those fields are absent. Pages and visible content are preserved, but visible names, annotations, attachments, layers, and document text are not redacted.",
   },
   {
+    title: "PDF organization",
+    body: "The browser copies selected pages into new PDF documents in the order and rotation shown. Combining, extracting, and splitting never change the selected originals or send them over the network. Page copying is not a lossless editor: digital signatures become invalid, and interactive forms, bookmarks, attachments, scripts, or other document-level features may not survive. Password-protected PDFs must be unlocked first.",
+  },
+  {
     title: "Image processing",
-    body: "Images are decoded and re-encoded through the browser Canvas API. The exported copy is checked for supported metadata containers across JPEG marker segments, PNG chunks, and WebP RIFF chunks. Re-encoding does not remove information visibly present in pixels, discards embedded ICC color profiles, and may change compression or color handling.",
+    body: "Images are decoded and re-encoded through the browser Canvas API. The resizer can preserve the source aspect ratio or use exact dimensions, and it limits exports to 12,000 pixels per side and 40 megapixels to reduce browser memory failures. Metadata-cleaning exports are checked for supported metadata containers across JPEG marker segments, PNG chunks, and WebP RIFF chunks. Re-encoding does not remove information visibly present in pixels, discards embedded ICC color profiles, and may change compression or color handling.",
   },
   {
     title: "Offline availability",

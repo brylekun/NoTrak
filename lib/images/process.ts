@@ -8,6 +8,8 @@ export type ImageProcessOptions = {
   quality: number;
   maxWidth?: number;
   maxHeight?: number;
+  targetWidth?: number;
+  targetHeight?: number;
 };
 
 export type ProcessedImage = {
@@ -41,17 +43,57 @@ export function outputImageName(originalName: string, suffix: string, type: Supp
   return `${base}-${suffix}.${extension}`;
 }
 
+export function resolveImageDimensions(
+  sourceWidth: number,
+  sourceHeight: number,
+  options: Pick<ImageProcessOptions, "maxWidth" | "maxHeight" | "targetWidth" | "targetHeight">,
+) {
+  const hasExactTarget = options.targetWidth !== undefined || options.targetHeight !== undefined;
+  if (!hasExactTarget) {
+    return fitDimensions(
+      sourceWidth,
+      sourceHeight,
+      options.maxWidth ?? sourceWidth,
+      options.maxHeight ?? sourceHeight,
+    );
+  }
+
+  if (
+    !Number.isInteger(options.targetWidth)
+    || !Number.isInteger(options.targetHeight)
+    || (options.targetWidth ?? 0) < 1
+    || (options.targetHeight ?? 0) < 1
+  ) {
+    throw new Error("Exact image dimensions must be positive whole numbers.");
+  }
+
+  return { width: options.targetWidth!, height: options.targetHeight! };
+}
+
+export async function readImageDimensions(file: File) {
+  validateImageFile(file);
+  if (typeof createImageBitmap !== "function") {
+    throw new Error("This browser does not support local image decoding.");
+  }
+
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  try {
+    if (bitmap.width < 1 || bitmap.height < 1) throw new Error("The selected image has invalid dimensions.");
+    return { width: bitmap.width, height: bitmap.height };
+  } finally {
+    bitmap.close();
+  }
+}
+
 export async function processImage(file: File, options: ImageProcessOptions): Promise<ProcessedImage> {
   validateImageFile(file);
+  if (typeof createImageBitmap !== "function") {
+    throw new Error("This browser does not support local image decoding.");
+  }
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
 
   try {
-    const dimensions = fitDimensions(
-      bitmap.width,
-      bitmap.height,
-      options.maxWidth ?? bitmap.width,
-      options.maxHeight ?? bitmap.height,
-    );
+    const dimensions = resolveImageDimensions(bitmap.width, bitmap.height, options);
     const canvas = document.createElement("canvas");
     canvas.width = dimensions.width;
     canvas.height = dimensions.height;

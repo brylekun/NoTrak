@@ -14,13 +14,13 @@
  * application's own pages and static assets are stored.
  */
 
-const CACHE_VERSION = "notrak-v1";
+const CACHE_VERSION = "notrak-v2";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const ASSET_CACHE = `${CACHE_VERSION}-assets`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
 const OFFLINE_URL = "/offline";
 
-const SHELL_URLS = ["/", "/tools", "/offline", "/privacy", "/methodology"];
+const SHELL_URLS = ["/", "/tools", "/offline", "/privacy", "/methodology", "/support"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

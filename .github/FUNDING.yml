@@ -1,0 +1,4 @@
+# Funding targets are duplicated in lib/support.ts, which the app itself reads.
+# Update both together.
+github: [brylekun]
+custom: ["https://www.paypal.com/donate/?business=brylekun%40gmail.com&item_name=NoTrak%20development&currency_code=USD"]

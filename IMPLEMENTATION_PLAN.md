@@ -16,7 +16,7 @@ Build **NoTrak**, a public, privacy-first utility website for ordinary users. Mo
 - Prefer Web Platform APIs over large dependencies.
 - Use API routes only when a request header or secret third-party API key is required.
 - Do not add authentication, a database, object storage, user profiles, or cloud history.
-- Do not include temporary email, file sharing, proxy/VPN features, AI analysis, or breach lookup in this project.
+- Do not include temporary email, file sharing, proxy/VPN features, or AI analysis in this project. Password breach checking is limited to the k-anonymous, browser-direct HIBP range protocol after explicit confirmation.
 - Give every tool a dedicated, indexable `/tools/...` page; do not make tools modal-only.
 - Review Vercel and third-party service limits and terms before public launch or monetization.
 
@@ -30,6 +30,10 @@ Visitor
         +-- Browser-only tools
         |     File API, Web Crypto, Canvas, Web Workers/WASM as needed
         |     Input -> local processing -> local result/download
+        |
+        +-- Explicit browser-direct lookup
+        |     Password -> local SHA-1 -> five-character prefix -> HIBP range API
+        |     Full hash suffix is compared locally; password/full hash never leave
         |
         +-- Small server routes
               /api/ip                 -> request/Vercel headers
@@ -63,13 +67,16 @@ app/
     tracking-url-cleaner/page.tsx
     remove-exif/page.tsx
     image-compressor/page.tsx
+    image-resizer/page.tsx
     password-generator/page.tsx
+    password-safety/page.tsx
     passphrase-generator/page.tsx
     file-encryption/page.tsx
     hash-generator/page.tsx
     qr-generator/page.tsx
     browser-privacy/page.tsx
     pdf-metadata-cleaner/page.tsx
+    pdf-toolkit/page.tsx
     phishing-checker/page.tsx
     malware-reputation/page.tsx
   api/
@@ -169,7 +176,21 @@ V1.2 also adds four local-only tools, bringing the released set to 22:
 | JSON Formatter | Browser | Format, minify, sort keys, and report the error location without echoing the document |
 | Text Encryption | Browser | AES-256-GCM with a pasteable armored block, reusing the file container's primitives |
 
-Possible later local-only additions: image resizer, user-agent analyzer, username generator, and synthetic test identity generator.
+Possible later local-only additions: user-agent analyzer, username generator, and synthetic test identity generator.
+
+### V1.3 — Password safety, image resizing, and PDF organization
+
+V1.3 adds a Password Safety Checker, local Image Resizer, and Private PDF Toolkit, bringing the released set to 25. Password analysis checks length, character variety, predictable sequences, repeated characters, and a small bundled common-password list without transmitting the input. Its optional breach-corpus check runs only after separate confirmation: the browser calculates the SHA-1 identifier required by Have I Been Pwned, sends only its first five hexadecimal characters directly to the fixed range endpoint, requests padded results, and compares the suffix locally. The password and full hash never leave the browser, and a miss is never described as proof of safety. Image resizing also stays in-browser, supports locked or exact dimensions and multiple output formats, and applies explicit dimension and megapixel limits before allocating the export canvas. PDF organization runs in a worker and lets visitors merge, extract, reorder, rotate, remove, or split pages without uploading the source documents; its interface discloses that document-level features and signatures may not survive page copying.
+
+### V1.4 — Local email header analysis
+
+| Tool | Processing | Notes |
+|---|---|---|
+| Email Header Analyzer | Browser | Parses a pasted header block locally; explains delivery hops, reported authentication, and sender mismatches |
+
+V1.4 adds the Email Header Analyzer, bringing the released set to 26. It fills the gap between the Phishing Checker, which inspects a suspicious link, and the message that carried it. Header blocks contain recipient names, internal hostnames, and the originating IP address, and the common web analyzers are paste-to-server forms, so this parses entirely in the browser with no network request, no new dependency, and no provider notice. The report unfolds every field, orders the `Received` chain from the earliest visible hop toward the recipient with per-hop delays, extracts the originating address and marks private ranges, and parses `Authentication-Results` (falling back to `Received-SPF` only when it adds a method that is otherwise absent).
+
+Two honesty constraints are enforced in code and covered by tests. Authentication verdicts are reported as written by the receiving server: the tool never validates a signature or queries DNS, and the interface says so. A clean report is never presented as proof of legitimacy, because a message sent from a genuinely compromised account produces one. Signals are weighted and explained rather than reduced to a verdict, and heuristics that legitimately fire on normal mail are scoped accordingly — a `Return-Path` on a different domain is raised only when DMARC did not pass, and organizational-domain comparison uses a small bundled two-part suffix list whose wording always shows both domains for the reader to judge.
 
 ## 6. API contracts
 
@@ -217,6 +238,7 @@ Validate the exact format, query MalwareBazaar, normalize its response, and retu
 | Google Safe Browsing | Known malicious/phishing URL lookup | Server-only key; confirm current eligibility and terms |
 | URLhaus | Malicious URL intelligence | Confirm current API/auth, attribution, and rate limits |
 | MalwareBazaar | SHA-256 reputation | Hash only; confirm current API/auth, attribution, and rate limits |
+| Have I Been Pwned Pwned Passwords | K-anonymous password breach lookup | Browser-direct after confirmation; five-character SHA-1 prefix only; request padding; no key |
 | Web Crypto API | Randomness, hashing, AES-GCM | Preferred native browser implementation |
 | `pdf-lib` | Local PDF metadata editing | Dynamically import on relevant tool page |
 | `exifr` | Local image metadata reading when needed | Dynamically import; removal should be verified after export |
@@ -321,6 +343,16 @@ Implementation status: steps 1–13 are implemented and verified with 207 unit t
 
 WebKit smoke tests could not run in this environment: the host is missing `libicu74`, `libxml2`, and `libflite1`. Safari coverage needs a machine with those libraries, or CI. Two browser tests are skipped on Firefox because Playwright's Firefox build does not apply `colorScheme` emulation to `matchMedia` and its offline emulation does not block top-level navigations; both behaviours are verified on Chromium.
 
+### Phase 6 — V1.3 password safety, image resizing, and PDF organization
+
+1. Add a local password-strength estimate with honest warnings and suggestions; do not claim a precise crack time or proof of safety.
+2. Add the optional HIBP Pwned Passwords range lookup behind a separate disclosure and confirmation. Hash in the browser, transmit only the five-character prefix directly to the fixed endpoint, request padding, and compare the suffix locally.
+3. Add unit and browser coverage proving that local analysis makes no request and the external lookup never sends a password or full hash. Update privacy, methodology, provider, CSP, registry, sitemap, and offline-cache integration.
+4. Add a local Image Resizer with aspect-ratio locking, percentage presets, exact dimensions, format and quality controls, safe canvas limits, an upscaling warning, and a verified download workflow.
+5. Add a worker-backed Private PDF Toolkit that merges, extracts, reorders, rotates, removes, and splits pages locally, with bounded file/page limits and explicit warnings about signatures and document-level features.
+
+Implementation status: implemented and verified with 226 unit tests and 43 browser-test definitions. All 84 applicable Chromium and Firefox checks passed, with two documented engine-specific skips; one unrelated Firefox 404 navigation timed out in the full run and passed immediately on its isolated retry. The browser checks prove that local password analysis makes no HIBP request, the confirmed lookup sends only the padded five-character prefix request with no body, image resizing produces the requested dimensions without a processing request, and PDF pages can be reordered, rotated, removed, rebuilt, downloaded, and reopened without a processing request.
+
 ### Deferred by decision — nonce-based Content Security Policy
 
 `script-src` still carries `'unsafe-inline'`. A nonce was implemented and measured, then reverted, because it is mutually exclusive with offline support:
@@ -347,6 +379,7 @@ The trade is a strict `script-src` against offline availability, CDN caching, an
 - [ ] Browser network inspection confirms local-only tools make no processing requests.
 - [ ] Malware lookup sends only the SHA-256 digest; no multipart/file body exists on the route.
 - [ ] URL checker contacts only the toolkit API and documented reputation providers; it never visits the submitted host.
+- [ ] Password analysis makes no request; the optional HIBP lookup sends only a five-character hash prefix after confirmation and requests padded results.
 - [ ] Sensitive values do not appear in the address bar, browser storage, application logs, telemetry, or error payloads.
 - [ ] Exported images/PDFs are re-opened and checked to confirm targeted metadata is removed.
 - [ ] Security headers and CSP are verified in Preview and Production.
@@ -380,6 +413,8 @@ The trade is a strict `script-src` against offline availability, CDN caching, an
 | M3 — V1 | Encryption, privacy check, speed test, PDF cleaner | Thirteen V1 tools pass functional, privacy, accessibility, and production checks |
 | M4 — V1.1 intelligence | URL and hash reputation tools plus remaining utilities | Provider terms/quotas are approved; failure/abuse controls and disclosures are live |
 | M5 — V1.2 quality | Theme support, tool discovery and SEO surfaces, failure boundaries, resilient provider states, Speed Test confidence, corrected privacy claims, offline support, and four new local tools | All 22 tools pass light/dark, keyboard, responsive, privacy-boundary, and protected Preview checks before production promotion |
+| M6 — V1.3 local safety and file utilities | Local password analysis, optional k-anonymous HIBP range lookup, image resizing, and PDF organization | Password analysis, image resizing, and PDF organization make no processing request; the confirmed HIBP lookup exposes only the documented prefix and IP; all 25 tools pass the release gate |
+| M7 — V1.4 local email header analysis | Local header unfolding, delivery-chain reconstruction, reported-authentication parsing, and explained sender mismatch signals | Header analysis issues no request of any kind, never presents a reported verdict as verification or a clean report as proof of legitimacy, and all 26 tools pass the release gate |
 
 ## 13. Deployment notes
 

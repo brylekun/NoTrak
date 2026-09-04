@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { featuredTools, readyTools, toolCategories, toolRegistry } from "../../lib/tools/registry";
 
-describe("V1.1 tool registry", () => {
+describe("tool registry", () => {
   it("publishes every released tool", () => {
     // 18 V1/V1.1 tools plus the four V1.2 additions: EXIF Viewer, Base64
-    // Converter, JSON Formatter, and Text Encryption.
-    expect(readyTools).toHaveLength(22);
+    // Converter, JSON Formatter, and Text Encryption, plus Password Safety,
+    // Image Resizer, and PDF Toolkit, plus the Email Header Analyzer.
+    expect(readyTools).toHaveLength(26);
     expect(readyTools).toHaveLength(toolRegistry.filter((tool) => tool.status === "ready").length);
   });
 

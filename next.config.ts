@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "base-uri 'self'",
-              "connect-src 'self' https://speed.cloudflare.com",
+              "connect-src 'self' https://speed.cloudflare.com https://api.pwnedpasswords.com",
               "font-src 'self'",
               "form-action 'self'",
               "frame-ancestors 'none'",

@@ -89,6 +89,19 @@ export default function PrivacyPage() {
               <p className="mt-4 text-sm leading-6 text-muted-foreground">
                 After a separate confirmation, URL reputation sends the full submitted URL through NoTrak to configured Google Safe Browsing and URLhaus services. Malware reputation sends only the locally calculated SHA-256 hash to MalwareBazaar—the selected file is never uploaded. Unconfigured providers are not contacted. Hosting and providers may retain operational records under their own policies.
               </p>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                The Password Safety Checker&rsquo;s strength analysis stays in your browser. If you separately confirm
+                the optional breach check, the browser calculates the SHA-1 identifier required by Have I Been
+                Pwned and sends only its first five hexadecimal characters directly to the provider. HIBP receives
+                that prefix and your request IP; the password and full hash never leave your device. NoTrak requests
+                a padded response, compares the remaining hash characters locally, and does not store the result.
+              </p>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                The funding links in the footer and on the support page are plain links. No badge image, payment widget,
+                or script from a funding platform is embedded anywhere in NoTrak, so loading a page never contacts one.
+                A platform receives your IP address only if you choose to open it, and the Monero option involves no
+                payment processor at all.
+              </p>
             </section>
           </div>
         </div>
