@@ -21,6 +21,7 @@
 
 # production
 /build
+/public/ocr/
 
 # misc
 .DS_Store

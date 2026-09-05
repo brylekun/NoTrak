@@ -6,8 +6,9 @@ describe("tool registry", () => {
   it("publishes every released tool", () => {
     // 18 V1/V1.1 tools plus the four V1.2 additions: EXIF Viewer, Base64
     // Converter, JSON Formatter, and Text Encryption, plus Password Safety,
-    // Image Resizer, and PDF Toolkit, plus the Email Header Analyzer.
-    expect(readyTools).toHaveLength(26);
+    // Image Resizer, and PDF Toolkit, plus the Email Header Analyzer and
+    // Sensitive Data Redactor and Image to Text.
+    expect(readyTools).toHaveLength(28);
     expect(readyTools).toHaveLength(toolRegistry.filter((tool) => tool.status === "ready").length);
   });
 

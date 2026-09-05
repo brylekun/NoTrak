@@ -22,9 +22,8 @@ describe("support links", () => {
   });
 
   /*
-   * The privacy boundary this project promises means a funding platform must
-   * never be contacted while a page loads. Links are fine; embedded assets are
-   * not, and `img-src 'self' data: blob:` would block them anyway.
+   * Outbound support destinations remain plain links. The separately embedded
+   * Buy Me a Coffee widget has its own disclosed asset requests.
    */
   it("points at no third-party image or script asset", () => {
     for (const link of supportLinks) {

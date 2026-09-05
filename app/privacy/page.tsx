@@ -77,6 +77,11 @@ export default function PrivacyPage() {
                 are stored. Nothing you type, select, generate, or upload is ever placed there, and the IP and
                 reputation lookups are explicitly excluded from caching. Clearing site data removes all of it.
               </p>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                Image to Text downloads NoTrak&rsquo;s bundled English OCR model and browser engine on first use. The
+                service worker may cache those application files for offline use, but it never caches your selected
+                image or the text recognized from it.
+              </p>
             </section>
             <section>
               <h2 className="text-xl font-semibold tracking-[-0.03em]">Necessary network information</h2>
@@ -97,10 +102,11 @@ export default function PrivacyPage() {
                 a padded response, compares the remaining hash characters locally, and does not store the result.
               </p>
               <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                The funding links in the footer and on the support page are plain links. No badge image, payment widget,
-                or script from a funding platform is embedded anywhere in NoTrak, so loading a page never contacts one.
-                A platform receives your IP address only if you choose to open it, and the Monero option involves no
-                payment processor at all.
+                The floating Buy Me a Coffee widget loads its script, icon, and font from Buy Me a Coffee when
+                you open a page. That provider receives your IP address and technical request information.
+                Opening the widget loads its donation page, which is governed by the provider&rsquo;s own privacy
+                and cookie policies. NoTrak does not pass tool inputs to the widget. The other funding options
+                remain plain outbound links, and the Monero option involves no payment processor.
               </p>
             </section>
           </div>

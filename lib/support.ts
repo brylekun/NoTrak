@@ -2,12 +2,9 @@
  * Funding destinations, kept in one place so the footer, the support page, and
  * the README describe the same targets.
  *
- * Privacy constraint: these are outbound links only. NoTrak never embeds a
- * badge image, script, or widget from a funding platform, because that would
- * send every visitor's IP address and referring page to a third party on page
- * load — exactly the tracking NoTrak exists to avoid. The Content-Security
- * Policy in `next.config.ts` keeps `img-src` at `'self' data: blob:`, so a
- * remote badge would be blocked even if one were added by mistake.
+ * These destinations are outbound links. The separate Buy Me a Coffee widget
+ * in the root layout loads vendor assets on page load; that exception is
+ * disclosed on /privacy and /support and allowed explicitly in the CSP.
  */
 
 export type SupportLink = {

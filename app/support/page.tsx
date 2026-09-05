@@ -9,7 +9,7 @@ import { hasMoneroAddress, moneroAddress, supportLinks } from "@/lib/support";
 
 export const metadata: Metadata = {
   title: "Support NoTrak",
-  description: "Ways to fund NoTrak's development. No tracking pixels, badge images, or payment widgets are embedded.",
+  description: "Ways to fund NoTrak's development through donation links and Buy Me a Coffee.",
   alternates: { canonical: "/support" },
 };
 
@@ -30,9 +30,9 @@ export default function SupportPage() {
           </p>
 
           <div className="callout-info mt-8">
-            <strong>This page embeds nothing.</strong> The options below are plain outbound links. No badge image,
-            payment widget, or script from a funding platform loads on any NoTrak page, so simply reading this costs you
-            no request to a third party. A platform learns about you only if you choose to open it.
+            <strong>About the donation widget.</strong> Buy Me a Coffee supplies the floating button and receives
+            your IP address when its assets load. Its donation page loads when you open the widget. The options
+            below are plain outbound links. See our privacy page for details.
           </div>
 
           <div className="mt-10 space-y-4">

@@ -26,6 +26,10 @@ const methods = [
     body: "A pasted header block is unfolded and parsed entirely in the browser, and parsing stops at the blank line so a pasted message body is never read as headers. The Received chain is reversed into delivery order, from the earliest hop NoTrak can see toward the recipient, with the address each receiving server actually recorded and the gap between consecutive dated hops. SPF, DKIM, and DMARC verdicts are read from Authentication-Results as the receiving server wrote them, falling back to Received-SPF only for a method that is otherwise absent. NoTrak does not validate a signature, query DNS, or check an SPF record, so a reported pass is only as trustworthy as the block it came from, and hops a sender writes themselves can be fabricated. Domain comparisons use a small bundled two-part suffix list and always show both domains, and a Return-Path on another domain is raised only when DMARC did not pass, because sending platforms use their own bounce domain routinely. Signals are weighted and explained rather than reduced to a verdict: a message sent from a genuinely compromised account produces a clean report, so a clean report is never presented as proof of legitimacy.",
   },
   {
+    title: "Sensitive-data redaction",
+    body: "Text is scanned locally for a conservative set of high-confidence patterns: email addresses, formatted phone numbers, IPv4 and IPv6 addresses, card-like numbers that pass the Luhn checksum, private-key blocks, JWTs, several documented token formats, assigned password or token values, and credentials or sensitive parameters inside HTTP URLs. Repeated exact values receive the same placeholder, and overlapping matches are resolved in favor of the more specific pattern. The detector deliberately does not guess names, street addresses, or unformatted phone numbers. A clean scan is not proof that text contains no personal information or secrets, so every sanitized result must still be reviewed before sharing.",
+  },
+  {
     title: "QR scanning and JWT decoding",
     body: "Selected QR images and camera frames are decoded locally; camera access starts only after a button press, and decoded links are never opened automatically. JWTs are Base64URL-decoded locally as untrusted JSON. No signature, issuer, audience, or authenticity verification is performed.",
   },
@@ -52,6 +56,10 @@ const methods = [
   {
     title: "Image processing",
     body: "Images are decoded and re-encoded through the browser Canvas API. The resizer can preserve the source aspect ratio or use exact dimensions, and it limits exports to 12,000 pixels per side and 40 megapixels to reduce browser memory failures. Metadata-cleaning exports are checked for supported metadata containers across JPEG marker segments, PNG chunks, and WebP RIFF chunks. Re-encoding does not remove information visibly present in pixels, discards embedded ICC color profiles, and may change compression or color handling.",
+  },
+  {
+    title: "Image-to-text recognition",
+    body: "The selected or pasted image is cropped and rotated through the browser Canvas API, then read by a bundled Tesseract.js WebAssembly engine and English recognition model. No image or recognized text is sent to an OCR service. The model reports an estimated confidence, but OCR can substitute characters, lose columns, and perform poorly on handwriting, blur, unusual fonts, or low contrast; important text must be checked against the original image.",
   },
   {
     title: "Offline availability",

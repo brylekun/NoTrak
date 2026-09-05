@@ -68,8 +68,10 @@ app/
     remove-exif/page.tsx
     image-compressor/page.tsx
     image-resizer/page.tsx
+    image-to-text/page.tsx
     password-generator/page.tsx
     password-safety/page.tsx
+    sensitive-data-redactor/page.tsx
     passphrase-generator/page.tsx
     file-encryption/page.tsx
     hash-generator/page.tsx
@@ -101,6 +103,7 @@ lib/
   tools/metadata.ts
   images/metadata.ts               # JPEG/PNG/WebP metadata container detection
   images/exif.ts                   # grouped EXIF report, location flagged
+  images/ocr.ts                    # OCR input, crop, rotation, and output boundaries
   security/provider-status.ts      # failure taxonomy and its wording
   security/client.ts               # normalized API errors for the browser
   crypto/
@@ -191,6 +194,26 @@ V1.3 adds a Password Safety Checker, local Image Resizer, and Private PDF Toolki
 V1.4 adds the Email Header Analyzer, bringing the released set to 26. It fills the gap between the Phishing Checker, which inspects a suspicious link, and the message that carried it. Header blocks contain recipient names, internal hostnames, and the originating IP address, and the common web analyzers are paste-to-server forms, so this parses entirely in the browser with no network request, no new dependency, and no provider notice. The report unfolds every field, orders the `Received` chain from the earliest visible hop toward the recipient with per-hop delays, extracts the originating address and marks private ranges, and parses `Authentication-Results` (falling back to `Received-SPF` only when it adds a method that is otherwise absent).
 
 Two honesty constraints are enforced in code and covered by tests. Authentication verdicts are reported as written by the receiving server: the tool never validates a signature or queries DNS, and the interface says so. A clean report is never presented as proof of legitimacy, because a message sent from a genuinely compromised account produces one. Signals are weighted and explained rather than reduced to a verdict, and heuristics that legitimately fire on normal mail are scoped accordingly — a `Return-Path` on a different domain is raised only when DMARC did not pass, and organizational-domain comparison uses a small bundled two-part suffix list whose wording always shows both domains for the reader to judge.
+
+### V1.5 — Local sensitive-data redaction
+
+| Tool | Processing | Notes |
+|---|---|---|
+| Sensitive Data Redactor | Browser | Finds conservative high-confidence patterns, lets the visitor review each masked finding, and creates a sanitized copy locally |
+
+V1.5 adds the Sensitive Data Redactor, bringing the released set to 27. It accepts pasted text or a bounded plain-text file, finds supported personal and credential patterns without sending the input anywhere, groups repeated exact values under one consistent placeholder, and lets the visitor exclude any finding before copying or downloading the sanitized result. Payment-card candidates must pass the Luhn checksum; known token, private-key, JWT, URL-secret, email, IP, and formatted-phone patterns are resolved without overlapping replacements.
+
+The tool is deliberately honest about its limits. It does not guess names, street addresses, or unformatted phone numbers, masked previews avoid needlessly echoing complete findings, and a zero-result scan is never described as proof that the text is safe to share. Input is capped at one million characters and selected files at 5 MB.
+
+### V1.6 — Local image-to-text recognition
+
+| Tool | Processing | Notes |
+|---|---|---|
+| Image to Text | Browser | Crops and rotates a screenshot or photo, then extracts editable English text with bundled OCR assets |
+
+V1.6 adds Image to Text, bringing the released set to 28. Visitors can choose, drop, or paste a JPEG, PNG, or WebP image, crop it with exact pixel bounds, rotate it in quarter turns, and recognize printed English text locally. The Tesseract.js worker, compatible WebAssembly cores, and compact English model are copied from pinned packages into same-origin build assets, so recognition never sends the image to an OCR provider. The first run loads roughly 10 MB of application assets, which the service worker may cache for later offline use.
+
+The result remains editable and can be copied, downloaded as text, or taken to the Sensitive Data Redactor. The interface reports model confidence only as an estimate and requires the visitor to verify important text against the original. Files are capped at 15 MB and 40 megapixels to bound browser memory use; the first version supports printed English rather than handwriting or multilingual recognition.
 
 ## 6. API contracts
 
@@ -353,6 +376,32 @@ WebKit smoke tests could not run in this environment: the host is missing `libic
 
 Implementation status: implemented and verified with 226 unit tests and 43 browser-test definitions. All 84 applicable Chromium and Firefox checks passed, with two documented engine-specific skips; one unrelated Firefox 404 navigation timed out in the full run and passed immediately on its isolated retry. The browser checks prove that local password analysis makes no HIBP request, the confirmed lookup sends only the padded five-character prefix request with no body, image resizing produces the requested dimensions without a processing request, and PDF pages can be reordered, rotated, removed, rebuilt, downloaded, and reopened without a processing request.
 
+### Phase 7 — V1.4 local email header analysis
+
+1. Parse pasted header fields, authentication results, addresses, and delivery hops locally with strict input limits.
+2. Explain reported evidence and sender mismatches without presenting a pass or clean report as verification.
+3. Prove the workflow makes no request, document the limitations, and add the tool to registry-driven discovery and SEO surfaces.
+
+Implementation status: implemented.
+
+### Phase 8 — V1.5 local sensitive-data redaction
+
+1. Add conservative detectors for supported personal details, payment-card candidates, credentials, private keys, JWTs, and URL secrets.
+2. Group repeated values, mask review previews, allow each finding to be included or excluded, and produce copyable and downloadable sanitized text.
+3. Accept bounded plain-text files, reject binary content, and prove the entire workflow makes no processing request.
+4. Document that detection is incomplete by design and that a clean scan never proves text is safe to share.
+
+Implementation status: implemented and verified with 277 unit tests and 48 browser-test definitions. All 94 applicable Chromium and Firefox checks passed, with the same two documented Firefox engine-specific skips described above. The browser workflow proves that reviewing, selecting, redacting, copying, and downloading sensitive text makes no processing request.
+
+### Phase 9 — V1.6 local image-to-text recognition
+
+1. Bundle the OCR worker, compatible WebAssembly cores, and compact English model as same-origin assets.
+2. Accept bounded image uploads and clipboard images, with exact crop and quarter-turn rotation controls.
+3. Return editable recognized text with copy and download actions, model confidence, and accuracy limitations.
+4. Prove recognition makes no processing request and remains usable after its application assets are cached.
+
+Implementation status: implemented and verified with 282 unit tests and 50 browser-test definitions. All 98 applicable Chromium and Firefox checks passed, with the same two documented Firefox engine-specific skips described above. The browser workflow performs real local OCR, exports the recognized text, proves no processing request is issued, then repeats recognition with the network disabled using cached application assets.
+
 ### Deferred by decision — nonce-based Content Security Policy
 
 `script-src` still carries `'unsafe-inline'`. A nonce was implemented and measured, then reverted, because it is mutually exclusive with offline support:
@@ -380,6 +429,7 @@ The trade is a strict `script-src` against offline availability, CDN caching, an
 - [ ] Malware lookup sends only the SHA-256 digest; no multipart/file body exists on the route.
 - [ ] URL checker contacts only the toolkit API and documented reputation providers; it never visits the submitted host.
 - [ ] Password analysis makes no request; the optional HIBP lookup sends only a five-character hash prefix after confirmation and requests padded results.
+- [ ] Sensitive-data redaction makes no request, masks review previews, and never presents a zero-result scan as proof of safety.
 - [ ] Sensitive values do not appear in the address bar, browser storage, application logs, telemetry, or error payloads.
 - [ ] Exported images/PDFs are re-opened and checked to confirm targeted metadata is removed.
 - [ ] Security headers and CSP are verified in Preview and Production.
@@ -415,6 +465,8 @@ The trade is a strict `script-src` against offline availability, CDN caching, an
 | M5 — V1.2 quality | Theme support, tool discovery and SEO surfaces, failure boundaries, resilient provider states, Speed Test confidence, corrected privacy claims, offline support, and four new local tools | All 22 tools pass light/dark, keyboard, responsive, privacy-boundary, and protected Preview checks before production promotion |
 | M6 — V1.3 local safety and file utilities | Local password analysis, optional k-anonymous HIBP range lookup, image resizing, and PDF organization | Password analysis, image resizing, and PDF organization make no processing request; the confirmed HIBP lookup exposes only the documented prefix and IP; all 25 tools pass the release gate |
 | M7 — V1.4 local email header analysis | Local header unfolding, delivery-chain reconstruction, reported-authentication parsing, and explained sender mismatch signals | Header analysis issues no request of any kind, never presents a reported verdict as verification or a clean report as proof of legitimacy, and all 26 tools pass the release gate |
+| M8 — V1.5 local sensitive-data redaction | Conservative local detection, per-finding review, consistent placeholders, and sanitized copy/download | Redaction issues no request, payment-card findings pass Luhn validation, a clean scan carries an explicit limitation, and all 27 tools pass the release gate |
+| M9 — V1.6 local image-to-text recognition | Local OCR engine and English model, upload/paste input, crop, rotation, editable result, and text download | Recognition issues no processing request, the result carries an accuracy limitation, cached OCR assets work offline, and all 28 tools pass the release gate |
 
 ## 13. Deployment notes
 

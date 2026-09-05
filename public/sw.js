@@ -14,7 +14,7 @@
  * application's own pages and static assets are stored.
  */
 
-const CACHE_VERSION = "notrak-v2";
+const CACHE_VERSION = "notrak-v3";
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const ASSET_CACHE = `${CACHE_VERSION}-assets`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;

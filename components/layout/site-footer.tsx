@@ -15,8 +15,7 @@ export function SiteFooter() {
           <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
           <Link href="/tools" className="hover:text-foreground">All tools</Link>
 
-          {/* Outbound links only. No badge image, script, or widget is embedded,
-              so loading a page never contacts a funding platform. */}
+          {/* Plain outbound links; the global donation widget lives in the root layout. */}
           <span className="hidden h-3 w-px bg-border sm:inline-block" aria-hidden="true" />
           {supportLinks.map((link) => {
             const Icon = ICONS[link.id as keyof typeof ICONS] ?? Heart;

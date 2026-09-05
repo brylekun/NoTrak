@@ -352,6 +352,61 @@ test("the image resizer exports exact dimensions without a processing request", 
   expect(download.suggestedFilename()).toBe("icon-192-resized.png");
 });
 
+test("image-to-text recognizes and exports text locally, then works offline", async ({ page, context }) => {
+  test.setTimeout(90_000);
+
+  await page.setContent('<canvas id="source" width="1200" height="320"></canvas>');
+  const image = await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>("#source")!;
+    const drawing = canvas.getContext("2d")!;
+    drawing.fillStyle = "white";
+    drawing.fillRect(0, 0, canvas.width, canvas.height);
+    drawing.fillStyle = "black";
+    drawing.font = "700 76px Arial, sans-serif";
+    drawing.fillText("NOTRAK OCR TEST 12345", 55, 190);
+    return canvas.toDataURL("image/png").split(",")[1];
+  });
+
+  const processingRequests: string[] = [];
+  await page.goto("/tools/image-to-text", { waitUntil: "load" });
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 15_000 });
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.startsWith("/api/") || (url.protocol.startsWith("http") && url.origin !== "http://127.0.0.1:3100")) {
+      processingRequests.push(request.url());
+    }
+  });
+
+  const input = page.getByLabel("Image containing printed text");
+  await input.setInputFiles({ name: "notrak-ocr-test.png", mimeType: "image/png", buffer: Buffer.from(image, "base64") });
+  await expect(page.getByText(/notrak-ocr-test\.png · 1200 × 320/i)).toBeVisible();
+  await page.getByRole("button", { name: "Extract text" }).click();
+
+  const output = page.getByLabel("Recognized text");
+  await expect(output).toHaveValue(/NOTRAK OCR TEST 12345/i, { timeout: 45_000 });
+  await expect(page.getByText(/Engine confidence: \d+%/)).toBeVisible();
+  expect(processingRequests).toEqual([]);
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download .txt" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("notrak-ocr-test-text.txt");
+  const stream = await download.createReadStream();
+  expect(stream).not.toBeNull();
+  const chunks: Buffer[] = [];
+  if (stream) for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  expect(Buffer.concat(chunks).toString("utf8")).toMatch(/NOTRAK OCR TEST 12345/i);
+
+  await context.setOffline(true);
+  try {
+    await page.getByRole("button", { name: "Extract text" }).click();
+    await expect(output).toHaveValue(/NOTRAK OCR TEST 12345/i, { timeout: 45_000 });
+    await expect(page.getByText("Recognition complete")).toBeVisible();
+  } finally {
+    await context.setOffline(false);
+  }
+});
+
 test("the PDF toolkit reorders, rotates, removes, and exports pages locally", async ({ page }) => {
   const first = await PDFDocument.create();
   first.addPage([100, 200]);
@@ -449,19 +504,72 @@ test("the email header analyzer traces a spoofed message without any request", a
   expect(processingRequests).toEqual([]);
 });
 
-test("funding links never contact a platform on page load", async ({ page }) => {
-  const thirdPartyRequests: string[] = [];
+test("the sensitive-data redactor reviews and sanitizes text without any request", async ({ page }) => {
+  const processingRequests: string[] = [];
+  await page.goto("/tools/sensitive-data-redactor");
   page.on("request", (request) => {
     const url = new URL(request.url());
-    if (url.protocol.startsWith("http") && url.origin !== "http://127.0.0.1:3100") thirdPartyRequests.push(request.url());
+    if (url.pathname.startsWith("/api/") || (url.protocol.startsWith("http") && url.origin !== "http://127.0.0.1:3100")) {
+      processingRequests.push(request.url());
+    }
   });
 
-  // The footer appears on every page, so a badge image would leak an IP address
-  // site-wide rather than only on /support.
+  await page.getByLabel("Text to inspect").fill([
+    "Email person@example.com and person@example.com.",
+    "Server 203.0.113.10",
+    "Card 4111 1111 1111 1111",
+    "token=ghp_abcdefghijklmnopqrstuvwxyz123456",
+    "Callback https://example.com/callback?access_token=abc123secret",
+  ].join("\n"));
+  await page.getByRole("button", { name: "Analyze locally" }).click();
+
+  await expect(page.getByText("Review 5 unique findings")).toBeVisible();
+  await expect(page.getByText(/6 occurrences found/)).toBeVisible();
+  await expect(page.getByText("pe•••@example.com")).toBeVisible();
+  await expect(page.getByText("•••• 1111")).toBeVisible();
+
+  await page.getByRole("checkbox", { name: /Redact Payment-card number/ }).uncheck();
+  const output = page.getByLabel("Sanitized result");
+  await expect(output).toHaveValue([
+    "Email [EMAIL_1] and [EMAIL_1].",
+    "Server [IP_ADDRESS_1]",
+    "Card 4111 1111 1111 1111",
+    "token=[SECRET_1]",
+    "Callback https://example.com/callback?access_token=[URL_SECRET_1]",
+  ].join("\n"));
+  expect(processingRequests).toEqual([]);
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download sanitized copy" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe("notrak-redacted.txt");
+  const stream = await download.createReadStream();
+  expect(stream).not.toBeNull();
+  const chunks: Buffer[] = [];
+  if (stream) for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  expect(Buffer.concat(chunks).toString("utf8")).toContain("Email [EMAIL_1]");
+});
+
+test("funding only loads the disclosed widget assets before interaction", async ({ page }) => {
+  const thirdPartyRequests: string[] = [];
+  const widgetAssets = new Set([
+    "https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js",
+    "https://cdn.buymeacoffee.com/widget/assets/coffee%20cup.svg",
+    "https://cdn.buymeacoffee.com/assets/img/widget/loader.svg",
+    "https://cdn.buymeacoffee.com/bmc_widget/font/710789a0-1557-48a1-8cec-03d52d663d74.eot",
+  ]);
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.protocol.startsWith("http") && url.origin !== "http://127.0.0.1:3100" && !widgetAssets.has(request.url())) thirdPartyRequests.push(request.url());
+  });
+
+  // The widget's donation page must remain unloaded until it is opened.
   await page.goto("/", { waitUntil: "load" });
+  await expect(page.locator('script[data-name="BMC-Widget"]')).toHaveAttribute("data-id", "NoTrak");
+  await expect(page.locator('script[data-name="BMC-Widget"]')).toHaveAttribute("data-color", "#40DCA5");
   const footer = page.locator("footer");
   await expect(footer.getByRole("link", { name: /GitHub Sponsors/ })).toHaveAttribute("href", "https://github.com/sponsors/brylekun");
-  await expect(footer.getByRole("link", { name: /PayPal/ })).toHaveAttribute("href", /^https:\/\/www\.paypal\.com\/donate\//);
+  await expect(footer.getByRole("link", { name: /PayPal/ })).toHaveAttribute("href", "https://paypal.me/BryleMartin");
 
   await page.goto("/support", { waitUntil: "load" });
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Keep NoTrak free");

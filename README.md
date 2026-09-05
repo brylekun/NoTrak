@@ -6,7 +6,7 @@
 
 Private browser tools with no accounts, file uploads, or saved history.
 
-NoTrak currently includes 26 tools for connection and reputation checks, password safety, email header analysis, secure generation, hashing, image, QR, and PDF processing, file and text encryption, browser privacy education, metadata inspection and removal, and developer utilities. Browse them all at `/tools`, which filters by category and searches by name.
+NoTrak currently includes 28 tools for connection and reputation checks, password safety, sensitive-data redaction, local image-to-text OCR, email header analysis, secure generation, hashing, image, QR, and PDF processing, file and text encryption, browser privacy education, metadata inspection and removal, and developer utilities. Browse them all at `/tools`, which filters by category and searches by name.
 
 The local tools keep working offline: NoTrak installs a service worker that caches only its own pages and assets. Running a tool with the network off demonstrates that its core processing does not depend on a server; the source code and network tests enforce the stronger no-input-transmission guarantee.
 
@@ -54,7 +54,7 @@ NoTrak carries no advertising, analytics, or affiliate links, so it earns nothin
 - [PayPal](https://www.paypal.com/donate/?business=brylekun%40gmail.com&item_name=NoTrak%20development&currency_code=USD) — one-time
 - Monero — the address, a copy button, and a locally generated QR code are on the in-app `/support` page
 
-The site footer links to all three as plain text links. NoTrak never embeds a badge image, payment widget, or script from a funding platform: that would send every visitor's IP address and referring page to a third party on page load. The badges above appear only in this README, which GitHub serves through its own image proxy. `img-src` in [`next.config.ts`](./next.config.ts) stays at `'self' data: blob:` so a remote badge cannot be added to the app by accident.
+The site footer uses plain text donation links. A floating Buy Me a Coffee widget for `NoTrak` also appears at the bottom right. It loads the provider's script, icon, and font on page load, exposing the visitor's IP address to that provider; its donation iframe loads when opened. This exception is disclosed on `/privacy` and `/support`. The CSP permits only the widget's script URL, asset host, and frame host in the relevant directives.
 
 Funding targets live in [`lib/support.ts`](./lib/support.ts). The Monero address is intentionally empty there until a verified address is pasted in; while it is empty, the app renders no Monero section rather than a placeholder that could be mistaken for a real address.
 
