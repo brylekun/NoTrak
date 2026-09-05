@@ -174,6 +174,24 @@ export function ImageToText() {
     clearResult();
   }
 
+  async function getWorker() {
+    if (workerRef.current) return workerRef.current;
+    setStatus("Loading the local OCR engine");
+    const Tesseract = await import("tesseract.js");
+    const worker = await Tesseract.createWorker("eng", Tesseract.OEM.LSTM_ONLY, {
+      workerPath: "/ocr/worker.min.js",
+      corePath: "/ocr/core",
+      langPath: "/ocr/lang",
+      logger: ({ status: nextStatus, progress: nextProgress }) => {
+        setStatus(ocrStatusLabel(nextStatus));
+        setProgress(Math.round(Math.max(0, Math.min(1, nextProgress)) * 100));
+      },
+    });
+    workerRef.current = worker;
+    await worker.setParameters({ preserve_interword_spaces: "1", user_defined_dpi: "300" });
+    return worker;
+  }
+
   async function recognize() {
     if (!image) {
       setMessage("Choose or paste an image first.");
@@ -187,19 +205,7 @@ export function ImageToText() {
         x: Number(crop.x), y: Number(crop.y), width: Number(crop.width), height: Number(crop.height),
       }, image);
       const prepared = await renderSelection(image, area, rotation);
-      setStatus("Loading the local OCR engine");
-      const Tesseract = await import("tesseract.js");
-      const worker = await Tesseract.createWorker("eng", Tesseract.OEM.LSTM_ONLY, {
-        workerPath: "/ocr/worker.min.js",
-        corePath: "/ocr/core",
-        langPath: "/ocr/lang",
-        logger: ({ status: nextStatus, progress: nextProgress }) => {
-          setStatus(ocrStatusLabel(nextStatus));
-          setProgress(Math.round(Math.max(0, Math.min(1, nextProgress)) * 100));
-        },
-      });
-      workerRef.current = worker;
-      await worker.setParameters({ preserve_interword_spaces: "1", user_defined_dpi: "300" });
+      const worker = await getWorker();
       const result = await worker.recognize(prepared);
       const recognized = result.data.text.trim();
       setText(recognized);
@@ -211,9 +217,6 @@ export function ImageToText() {
       setMessage(reason instanceof Error ? reason.message : "Text recognition could not finish.");
       setStatus("");
     } finally {
-      const worker = workerRef.current;
-      workerRef.current = null;
-      if (worker) await worker.terminate().catch(() => undefined);
       setBusy(false);
     }
   }

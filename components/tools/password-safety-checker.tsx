@@ -17,6 +17,7 @@ type BreachResult =
   | { status: "not-found"; count: 0 };
 
 const MAX_RANGE_RESPONSE_BYTES = 512 * 1024;
+const BREACH_COUNT_FORMATTER = new Intl.NumberFormat("en-US");
 
 function strengthColor(score: number) {
   if (score < 40) return "bg-destructive";
@@ -214,7 +215,7 @@ export function PasswordSafetyChecker() {
               </h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 {breachResult.status === "found"
-                  ? `This password appears ${breachResult.count.toLocaleString()} times in the provider’s corpus. Do not use it; replace it anywhere it is active.`
+                ? `This password appears ${BREACH_COUNT_FORMATTER.format(breachResult.count)} times in the provider’s corpus. Do not use it; replace it anywhere it is active.`
                   : "No matching hash was returned. This does not prove the password is safe, unique, or absent from every breach."}
               </p>
             </div>
