@@ -3,12 +3,15 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { JsonLd } from "@/components/seo/json-ld";
 import { ToolCard } from "@/components/tool-card";
+import { websiteStructuredData } from "@/lib/seo/structured-data";
 import { featuredTools, readyTools } from "@/lib/tools/registry";
 
 export default function Home() {
   return (
     <div className="min-h-screen overflow-hidden">
+      <JsonLd data={websiteStructuredData()} />
       <SiteHeader />
 
       <main>

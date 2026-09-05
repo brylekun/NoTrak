@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { getToolGuide } from "../../lib/tools/guides";
 import { featuredTools, readyTools, toolCategories, toolRegistry } from "../../lib/tools/registry";
 
 describe("tool registry", () => {
@@ -34,5 +35,24 @@ describe("tool registry", () => {
 
   it("keeps every slug unique", () => {
     expect(new Set(toolRegistry.map((tool) => tool.slug)).size).toBe(toolRegistry.length);
+  });
+
+  it("gives every released tool a useful guide and valid related links", () => {
+    const releasedSlugs = new Set(readyTools.map((tool) => tool.slug));
+
+    for (const tool of readyTools) {
+      const guide = getToolGuide(tool.slug);
+      expect(guide.summary.length, tool.slug).toBeGreaterThan(40);
+      expect(guide.useCases.length, tool.slug).toBeGreaterThanOrEqual(2);
+      expect(guide.howItWorks.length, tool.slug).toBeGreaterThan(50);
+      expect(guide.limitations.length, tool.slug).toBeGreaterThan(50);
+      expect(guide.relatedSlugs.length, tool.slug).toBeGreaterThanOrEqual(3);
+      expect(new Set(guide.relatedSlugs).size, tool.slug).toBe(guide.relatedSlugs.length);
+
+      for (const relatedSlug of guide.relatedSlugs) {
+        expect(releasedSlugs.has(relatedSlug), `${tool.slug} links to missing ${relatedSlug}`).toBe(true);
+        expect(relatedSlug, tool.slug).not.toBe(tool.slug);
+      }
+    }
   });
 });

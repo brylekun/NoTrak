@@ -88,6 +88,7 @@ app/
       file-hash/route.ts
 components/
   layout/
+  seo/json-ld.tsx                  # safely serialized structured-data blocks
   tool-shell.tsx
   tool-card.tsx
   tool-browser.tsx                 # client search/filter for the tools index
@@ -95,10 +96,12 @@ components/
   result-state.tsx
   ui/                              # shadcn/ui components
 lib/
+  seo/structured-data.ts           # WebSite and tool breadcrumb schemas
   site.ts                          # single resolved public origin
   clipboard.ts                     # clipboard writes with a definite outcome
   theme.ts                         # three-state preference; absent means system
   tools/registry.ts
+  tools/guides.ts                  # useful per-tool guidance and related links
   tools/icons.ts
   tools/metadata.ts
   images/metadata.ts               # JPEG/PNG/WebP metadata container detection
@@ -159,7 +162,7 @@ V1.2 is primarily a quality release. It strengthens the existing 18 tools and ad
 |---|---|---|
 | Light and dark themes | System-aware initial theme, accessible manual toggle, locally persisted preference, and a cohesive NoTrak palette | No initial theme flash; both themes remain readable across the homepage, tool shells, forms, results, warnings, and downloads |
 | Tool discovery | A dedicated `/tools` index with category filtering and search, plus a curated homepage subset | Every released tool is reachable and filterable; the homepage stays scannable as the toolkit grows |
-| Discoverability | `metadataBase`, canonical URLs, social cards, `sitemap.xml`, and `robots.txt` generated from the registry | Each released tool page is individually indexable and a new tool appears in the sitemap without manual edits |
+| Discoverability | Explicit favicon signals, canonical URLs, social cards, honest `sitemap.xml` entries, `robots.txt`, WebSite/Breadcrumb structured data, and crawlable per-tool guides | Each released tool page is individually indexable, explains its use and limits, and links to relevant tools; a new tool cannot pass the registry tests without guide content |
 | Failure and recovery surfaces | Route-level error boundary, root boundary, 404 page, and definite clipboard outcomes | A thrown tool error or blocked browser API produces NoTrak-framed guidance rather than a silent no-op or a default error screen |
 | External-lookup resilience | Clear rate-limit, quota, timeout, authentication, and provider-outage states | Failures never become a `safe` result, reveal upstream details, or disable available local analysis |
 | Speed Test confidence | Explain unstable samples and distinguish complete, partial, and variable measurements | Results do not imply laboratory precision and remain useful when a browser or network produces incomplete samples |
@@ -168,7 +171,7 @@ V1.2 is primarily a quality release. It strengthens the existing 18 tools and ad
 | Offline availability | Installable manifest and a service worker that caches only NoTrak's own pages and assets | Local tools keep working with the network off; no tool input and no `/api` response is ever cached |
 | Correctness of privacy claims | Every scored or verified claim must be backed by what the code actually measures | A displayed score responds to real changes; a "verified" or "protected" claim is proven by a test |
 
-Implementation status: implemented — the system-aware three-state theme, the `/tools` index, registry-driven SEO surfaces, the error/404/root boundaries, shared disclosure callouts, the reduced-motion guard, HSTS, the external-lookup failure taxonomy, the Speed Test confidence rating, offline support, the honest exposure score, encrypted-filename containers, container-aware image metadata detection, the expanded tracking-parameter rules, batch image cleaning with drag-and-drop, and four new local tools. Pending: the full manual accessibility audit (keyboard, screen reader, 200% zoom, physical devices) and the nonce-based CSP, which is deferred by decision — see below.
+Implementation status: implemented — the system-aware three-state theme, the `/tools` index, registry-driven SEO surfaces, WebSite and breadcrumb structured data, honest sitemap metadata, per-tool practical guides and related links, the error/404/root boundaries, shared disclosure callouts, the reduced-motion guard, HSTS, the external-lookup failure taxonomy, the Speed Test confidence rating, offline support, the honest exposure score, encrypted-filename containers, container-aware image metadata detection, the expanded tracking-parameter rules, batch image cleaning with drag-and-drop, and four new local tools. Pending: the full manual accessibility audit (keyboard, screen reader, 200% zoom, physical devices) and the nonce-based CSP, which is deferred by decision — see below.
 
 V1.2 also adds four local-only tools, bringing the released set to 22:
 

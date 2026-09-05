@@ -8,6 +8,10 @@ test("the homepage features a curated set and links to the full index", async ({
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Useful tools");
 
+  const websiteData = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? "{}");
+  expect(websiteData["@type"]).toBe("WebSite");
+  expect(websiteData.name).toBe("NoTrak");
+
   for (const tool of featuredTools) {
     await expect(page.getByRole("link", { name: new RegExp(tool.name, "i") }).first()).toBeVisible();
   }
@@ -19,7 +23,7 @@ test("the homepage features a curated set and links to the full index", async ({
 test("the tools index exposes every released tool and filters them", async ({ page }) => {
   await page.goto("/tools", { waitUntil: "domcontentloaded" });
 
-  for (const tool of readyTools) {
+for (const tool of readyTools) {
     await expect(page.getByRole("link", { name: new RegExp(tool.name, "i") }).first()).toBeVisible();
   }
 
@@ -50,6 +54,9 @@ test("the sitemap and robots files list the released tools", async ({ request })
   for (const tool of readyTools) {
     expect(xml, `sitemap is missing ${tool.slug}`).toContain(`/tools/${tool.slug}`);
   }
+  expect(xml).not.toContain("<lastmod>");
+  expect(xml).not.toContain("<changefreq>");
+  expect(xml).not.toContain("<priority>");
 
   const robots = await request.get("/robots.txt");
   expect(robots.status()).toBe(200);
@@ -110,19 +117,27 @@ test("the theme toggle can return to following the system setting", async ({ pag
   await expect(page.locator("html")).not.toHaveClass(/dark/);
 });
 
-for (const tool of readyTools) {
+  for (const tool of readyTools) {
   test(`${tool.name} has a usable release shell`, async ({ page }) => {
     const response = await page.goto(`/tools/${tool.slug}`, { waitUntil: "domcontentloaded" });
     expect(response?.status()).toBe(200);
     await expect(page.getByRole("heading", { level: 1, name: tool.name })).toBeVisible();
     await expect(page.getByText(tool.mode === "local" ? "Processed locally" : "External lookup").first()).toBeVisible();
-    await expect(page.getByText(tool.privacyNotice)).toBeVisible();
+    await expect(page.getByRole("complementary").getByText(tool.privacyNotice)).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: `About ${tool.name}` })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 3, name: "Know the limits" })).toBeVisible();
+    await expect(page.getByRole("region", { name: `About ${tool.name}` }).getByRole("link")).toHaveCount(3);
+
+    const breadcrumbs = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? "{}");
+    expect(breadcrumbs["@type"]).toBe("BreadcrumbList");
+    expect(breadcrumbs.itemListElement.at(-1).name).toBe(tool.name);
   });
 }
 
 test("the manifest and icons make NoTrak installable", async ({ page, request }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator('link[rel="manifest"]')).toHaveCount(1);
+  await expect(page.locator('link[rel="icon"]')).toHaveCount(2);
 
   const manifest = await request.get("/manifest.webmanifest");
   expect(manifest.status()).toBe(200);

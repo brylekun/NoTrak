@@ -57,6 +57,11 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   appleWebApp: { capable: true, title: siteName, statusBarStyle: "default" },
   icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml", sizes: "any" },
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    shortcut: "/icon.svg",
     apple: "/icons/apple-touch-icon.png",
   },
 };
