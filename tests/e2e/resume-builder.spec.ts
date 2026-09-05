@@ -70,7 +70,7 @@ test("resume builder fits a mobile screen", async ({ page }, testInfo) => {
   await page.screenshot({ path: testInfo.outputPath("mobile-preview.png") });
 });
 
-test("both resume templates export previewed pages and keep working offline", async ({ page, context }, testInfo) => {
+test("both resume templates export previewed pages and keep working offline", async ({ page, context, browserName }, testInfo) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto("/tools/resume-builder");
   await page.getByRole("button", { name: "Load fictional example" }).click();
@@ -87,8 +87,7 @@ test("both resume templates export previewed pages and keep working offline", as
     const pdf = await PDFDocument.load(await readFile((await file.path())!));
     await expect(page.locator('svg[aria-label^="Resume preview page"]')).toHaveCount(pdf.getPageCount());
   }
-  // Fonts and the PDF library are already loaded; edits and exports need no provider.
-  await context.setOffline(true);
+
   const draft = sampleResume();
   draft.summary = "Clear communication and reliable delivery. ".repeat(50);
   draft.experience[0].details = "A detailed achievement supported by evidence and good documentation. ".repeat(35);
@@ -96,11 +95,22 @@ test("both resume templates export previewed pages and keep working offline", as
   await page.getByLabel("Open resume draft file").setInputFiles({ name: "long.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(draft)) });
   await expect(page.getByText("Local draft opened. No file was uploaded.")).toBeVisible();
   await expect(page.locator('svg[aria-label^="Resume preview page"]').nth(1)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Download PDF" })).toBeEnabled();
-  const download = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download PDF" }).click();
-  const file = await download; await file.saveAs(testInfo.outputPath("multipage.pdf"));
-  const pdf = await PDFDocument.load(await readFile((await file.path())!));
-  expect(pdf.getPageCount()).toBeGreaterThan(1);
-  await expect(page.locator('svg[aria-label^="Resume preview page"]')).toHaveCount(pdf.getPageCount());
+
+  // Fonts and the PDF library are already loaded; edits and exports need no provider.
+  if (browserName !== "webkit") {
+    await context.setOffline(true);
+  }
+  try {
+    await expect(page.getByRole("button", { name: "Download PDF" })).toBeEnabled();
+    const download = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download PDF" }).click();
+    const file = await download; await file.saveAs(testInfo.outputPath("multipage.pdf"));
+    const pdf = await PDFDocument.load(await readFile((await file.path())!));
+    expect(pdf.getPageCount()).toBeGreaterThan(1);
+    await expect(page.locator('svg[aria-label^="Resume preview page"]')).toHaveCount(pdf.getPageCount());
+  } finally {
+    if (browserName !== "webkit") {
+      await context.setOffline(false);
+    }
+  }
 });
