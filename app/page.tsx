@@ -14,11 +14,11 @@ export default function Home() {
       <JsonLd data={websiteStructuredData()} />
       <SiteHeader />
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <section className="relative border-b border-border/70">
           <div className="ambient-grid" aria-hidden="true" />
           <div className="relative mx-auto grid w-full max-w-7xl gap-10 px-5 py-14 sm:px-8 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:py-24">
-            <div>
+            <div className="motion-reveal">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1.5 text-xs font-semibold text-primary">
                 <span className="size-1.5 rounded-full bg-primary shadow-[0_0_0_4px_color-mix(in_oklch,var(--primary),transparent_82%)]" />
                 Privacy-first by design
@@ -32,7 +32,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="privacy-panel">
+            <div className="privacy-panel motion-reveal motion-delay-2">
               <div className="flex items-center gap-3">
                 <div className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary">
                   <Sparkles className="size-5" aria-hidden="true" />
@@ -59,7 +59,7 @@ export default function Home() {
         </section>
 
         <section id="tools" className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
-          <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div className="motion-reveal mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="eyebrow">Start here</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">Everyday privacy tools</h2>
@@ -69,13 +69,13 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="motion-grid grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {featuredTools.map((tool, index) => (
               <ToolCard key={tool.slug} tool={tool} index={index} />
             ))}
           </div>
 
-          <div className="mt-12 flex flex-col gap-4 rounded-3xl border border-border/80 bg-card/60 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
+          <div className="motion-reveal mt-12 flex flex-col gap-4 rounded-3xl border border-border/80 bg-card/60 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8">
             <div>
               <p className="eyebrow">The full toolkit</p>
               <h2 className="mt-2 text-xl font-semibold tracking-[-0.025em]">
@@ -88,7 +88,7 @@ export default function Home() {
             </div>
             <Link
               href="/tools"
-              className="group inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
+              className="group inline-flex shrink-0 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-150 hover:bg-primary/85 active:translate-y-px active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:active:transform-none"
             >
               Browse all tools
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" />

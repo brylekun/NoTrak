@@ -5,6 +5,7 @@ import { Check, Copy, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FeedbackMessage } from "@/components/ui/feedback-message";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { generateUuids } from "@/lib/developer/uuid";
@@ -84,7 +85,7 @@ export function UuidGenerator() {
         readOnly
         spellCheck={false}
       />
-      <p className={`mt-3 min-h-5 text-sm ${message.includes("failed") || message.includes("between") ? "text-destructive" : "text-muted-foreground"}`} aria-live="polite">{message}</p>
+      <FeedbackMessage className="mt-3" tone={message.includes("copied") ? "success" : "error"}>{message}</FeedbackMessage>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Braces, Check, Copy, Minimize2, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FeedbackMessage } from "@/components/ui/feedback-message";
 import { Textarea } from "@/components/ui/textarea";
 import { COPY_FALLBACK_MESSAGE, copyToClipboard } from "@/lib/clipboard";
 import { JsonParseError, formatJson, type JsonFormatResult } from "@/lib/developer/json";
@@ -71,7 +72,7 @@ export function JsonFormatter() {
       </div>
 
       {result && (
-        <div className="mt-7 border-t border-border/70 pt-6" aria-live="polite">
+        <div className="result-enter mt-7 border-t border-border/70 pt-6" aria-live="polite">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <label htmlFor="json-output" className="text-sm font-semibold">Result</label>
             <p className="text-xs text-muted-foreground">
@@ -82,14 +83,14 @@ export function JsonFormatter() {
           </div>
           <div className="mt-2 flex gap-2">
             <Textarea id="json-output" className="min-h-64 font-mono text-sm" value={result.output} readOnly />
-            <Button className="h-10 shrink-0 px-3" variant="outline" onClick={copyOutput} aria-label="Copy formatted JSON">
+            <Button className="h-11 min-h-[44px] min-w-[44px] shrink-0 px-3" variant="outline" onClick={copyOutput} aria-label="Copy formatted JSON">
               {message === "Formatted JSON copied." ? <Check /> : <Copy />}
             </Button>
           </div>
         </div>
       )}
 
-      <p className="mt-4 min-h-5 text-sm text-destructive" role="alert" aria-live="polite">{message}</p>
+      <FeedbackMessage className="mt-4" tone={message === "Formatted JSON copied." ? "success" : "error"}>{message}</FeedbackMessage>
       <p className="mt-2 text-xs leading-5 text-muted-foreground">
         Parsed and re-printed by your browser&rsquo;s own JSON engine. Nothing is sent anywhere, so pasting a payload
         with real data does not expose it. Comments and trailing commas are not valid JSON and will be reported as

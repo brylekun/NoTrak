@@ -309,7 +309,7 @@ export function ImageResizer() {
       </div>
 
       {result && (
-        <section className="mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
+        <section className="result-enter mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
           <h2 className="font-semibold">Resized copy ready</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {result.width} × {result.height} · {formatByteSize(result.size)}

@@ -190,7 +190,7 @@ export function FileEncryption() {
       </div>
 
       {result && (
-        <div className="mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
+        <div className="result-enter mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
           <p className="font-semibold">{result.action === "encrypt" ? "Encrypted file ready" : "Decrypted file ready"}</p>
           <p className="mt-1 text-sm text-muted-foreground">{result.name} · {formatByteSize(result.size)}</p>
           {result.legacyCleartextName && (

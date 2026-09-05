@@ -97,8 +97,8 @@ export function ThemeToggle() {
   const Icon = icons[preference];
 
   return (
-    <Button type="button" variant="ghost" size="icon" onClick={cycleTheme}>
-      <Icon className="size-4" aria-hidden="true" />
+    <Button type="button" variant="ghost" size="icon" onClick={cycleTheme} title={themeToggleLabel(preference)}>
+      <Icon key={preference} className="theme-icon size-4" aria-hidden="true" />
       <span className="sr-only">{themeToggleLabel(preference)}</span>
     </Button>
   );

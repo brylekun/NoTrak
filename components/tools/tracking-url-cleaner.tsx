@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Copy, Eraser, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { FeedbackMessage } from "@/components/ui/feedback-message";
 import { Textarea } from "@/components/ui/textarea";
 import { cleanTrackingUrl, type CleanUrlResult } from "@/lib/privacy/tracking-url";
 import { COPY_FALLBACK_MESSAGE, copyToClipboard } from "@/lib/clipboard";
@@ -72,7 +73,7 @@ export function TrackingUrlCleaner() {
       </div>
 
       {result && (
-        <div className="mt-7 border-t border-border/70 pt-6" aria-live="polite">
+        <div className="result-enter mt-7 border-t border-border/70 pt-6" aria-live="polite">
           <div className="flex items-center justify-between gap-4">
             <label htmlFor="cleaned-url" className="text-sm font-semibold">Clean link</label>
             <span className="mode-local">
@@ -81,7 +82,7 @@ export function TrackingUrlCleaner() {
           </div>
           <div className="mt-2 flex gap-2">
             <Textarea id="cleaned-url" className="min-h-24 font-mono text-sm" value={result.cleanedUrl} readOnly />
-            <Button className="h-10 shrink-0 px-3" variant="outline" onClick={copyResult} aria-label="Copy clean link">
+            <Button className="h-11 min-h-[44px] min-w-[44px] shrink-0 px-3" variant="outline" onClick={copyResult} aria-label="Copy clean link">
               {message.startsWith("Clean link copied") ? <Check /> : <Copy />}
             </Button>
           </div>
@@ -105,9 +106,7 @@ export function TrackingUrlCleaner() {
         </div>
       )}
 
-      <p className={`mt-4 min-h-5 text-sm ${result ? "text-muted-foreground" : "text-destructive"}`} role={result ? undefined : "alert"} aria-live="polite">
-        {message}
-      </p>
+      <FeedbackMessage className="mt-4" tone={message.startsWith("Clean link copied") ? "success" : "error"}>{message}</FeedbackMessage>
     </div>
   );
 }

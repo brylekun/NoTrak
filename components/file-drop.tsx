@@ -34,8 +34,8 @@ export function FileDrop({ label, hint, accept, multiple = false, disabled = fal
       <label htmlFor={inputId} className="text-sm font-semibold">{label}</label>
       <div
         className={cn(
-          "mt-2 rounded-2xl border border-dashed p-4 transition-colors motion-reduce:transition-none",
-          dragging ? "border-primary bg-primary/8" : "border-border/80",
+          "group/drop mt-2 rounded-2xl border border-dashed p-4 transition-[transform,background-color,border-color,box-shadow] duration-200 ease-[var(--motion-ease-out)] motion-reduce:transition-none",
+          dragging ? "scale-[1.01] border-primary bg-primary/8 shadow-[0_18px_45px_-32px_var(--primary)]" : "border-border/80",
           disabled && "pointer-events-none opacity-60",
         )}
         onDragOver={(event) => {
@@ -54,7 +54,7 @@ export function FileDrop({ label, hint, accept, multiple = false, disabled = fal
         }}
       >
         <div className="flex items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground">
+          <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground transition-transform duration-200 motion-reduce:transition-none", dragging && "-translate-y-0.5 scale-105")}>
             <UploadCloud className="size-5" aria-hidden="true" />
           </span>
           <div className="min-w-0">

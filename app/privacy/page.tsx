@@ -31,7 +31,7 @@ export default function PrivacyPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
-      <main className="flex-1">
+      <main id="main-content" tabIndex={-1} className="flex-1">
         <div className="mx-auto w-full max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
           <p className="eyebrow">Privacy</p>
           <h1 className="mt-3 max-w-3xl text-balance text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">

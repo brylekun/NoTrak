@@ -94,6 +94,8 @@ test("both resume templates export previewed pages and keep working offline", as
   draft.experience[0].details = "A detailed achievement supported by evidence and good documentation. ".repeat(35);
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByLabel("Open resume draft file").setInputFiles({ name: "long.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(draft)) });
+  await expect(page.getByText("Local draft opened. No file was uploaded.")).toBeVisible();
+  await expect(page.locator('svg[aria-label^="Resume preview page"]').nth(1)).toBeVisible();
   await expect(page.getByRole("button", { name: "Download PDF" })).toBeEnabled();
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download PDF" }).click();

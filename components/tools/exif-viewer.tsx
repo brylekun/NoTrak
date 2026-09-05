@@ -89,7 +89,7 @@ export function ExifViewer() {
       </div>
 
       {inspection && (
-        <div className="mt-7 space-y-5 border-t border-border/70 pt-6" aria-live="polite">
+        <div className="result-enter mt-7 space-y-5 border-t border-border/70 pt-6" aria-live="polite">
           {inspection.report.hasLocation && (
             <div className="callout-warning flex items-start gap-3">
               <AlertTriangle className="mt-0.5 size-5 shrink-0" aria-hidden="true" />

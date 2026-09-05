@@ -173,7 +173,7 @@ export function SensitiveDataRedactor() {
       </div>
 
       {scan && scan.findings.length > 0 && (
-        <div className="mt-7 space-y-6 border-t border-border/70 pt-6" aria-live="polite">
+        <div className="result-enter mt-7 space-y-6 border-t border-border/70 pt-6" aria-live="polite">
           <section className="rounded-2xl border border-primary/20 bg-primary/6 p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="flex items-start gap-3">
@@ -255,7 +255,7 @@ export function SensitiveDataRedactor() {
       )}
 
       {scan && scan.findings.length === 0 && (
-        <section className="mt-7 rounded-2xl border border-border/80 bg-muted/30 p-5" aria-live="polite">
+        <section className="result-enter mt-7 rounded-2xl border border-border/80 bg-muted/30 p-5" aria-live="polite">
           <div className="flex items-start gap-3">
             <FileText className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
             <div>

@@ -311,7 +311,7 @@ export function PdfToolkit() {
       </div>
 
       {combined && (
-        <section className="mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
+        <section className="result-enter mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
           <h2 className="font-semibold">{files.length > 1 ? "Merged PDF ready" : "PDF export ready"}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{pages.length} pages · {formatByteSize(combined.size)}</p>
           <Button className="mt-4 h-10 px-4" nativeButton={false} render={<a href={combined.url} download={combined.name} />}>
@@ -321,7 +321,7 @@ export function PdfToolkit() {
       )}
 
       {split.length > 0 && (
-        <section className="mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
+        <section className="result-enter mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
           <h2 className="font-semibold">Separate PDFs ready</h2>
           <p className="mt-1 text-sm text-muted-foreground">Download each selected page as its own document.</p>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">

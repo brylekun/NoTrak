@@ -88,7 +88,7 @@ export function QrGenerator() {
       </div>
 
       {dataUrl && (
-        <div className="mt-7 grid justify-items-center gap-4 border-t border-border/70 pt-6" aria-live="polite">
+        <div className="result-enter mt-7 grid justify-items-center gap-4 border-t border-border/70 pt-6" aria-live="polite">
           {/* A data URL keeps the generated QR entirely in this document. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="w-full max-w-72 rounded-2xl border border-border bg-white p-3" src={dataUrl} alt="Generated QR code preview" />

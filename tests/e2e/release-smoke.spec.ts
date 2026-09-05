@@ -117,6 +117,79 @@ test("the theme toggle can return to following the system setting", async ({ pag
   await expect(page.locator("html")).not.toHaveClass(/dark/);
 });
 
+test("interface motion is restrained and follows reduced-motion preferences", async ({ page }) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const hero = page.locator(".motion-reveal").first();
+  await expect(hero).toBeVisible();
+  expect(await hero.evaluate((element) => getComputedStyle(element).animationName)).toContain("notrak-reveal");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  const timing = await page.locator(".tool-card").first().evaluate((element) => {
+    const style = getComputedStyle(element);
+    const milliseconds = (value: string) => Math.max(...value.split(",").map((entry) => {
+      const token = entry.trim();
+      return token.endsWith("ms") ? Number.parseFloat(token) : Number.parseFloat(token) * 1_000;
+    }));
+    return { animation: milliseconds(style.animationDuration), transition: milliseconds(style.transitionDuration), opacity: style.opacity };
+  });
+  expect(timing.animation).toBeLessThanOrEqual(0.01);
+  expect(timing.transition).toBeLessThanOrEqual(0.01);
+  expect(timing.opacity).toBe("1");
+});
+
+test("navigation identifies the current section and keeps every destination available on mobile", async ({ page }) => {
+  await page.goto("/tools/password-generator", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Tools" }))
+    .toHaveAttribute("aria-current", "page");
+
+  await page.setViewportSize({ width: 375, height: 760 });
+  const menuButton = page.getByRole("button", { name: "Open navigation" });
+  await menuButton.click();
+
+  const mobileNavigation = page.getByRole("navigation", { name: "Mobile navigation" });
+  await expect(mobileNavigation.getByRole("link", { name: "Methodology" })).toBeVisible();
+  await expect(mobileNavigation.getByRole("link", { name: "Tools" })).toHaveAttribute("aria-current", "page");
+
+  await page.keyboard.press("Escape");
+  await expect(mobileNavigation).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Open navigation" })).toBeFocused();
+});
+
+test("keyboard visitors can skip repeated navigation", async ({ page }) => {
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.keyboard.press("Tab");
+
+  const skipLink = page.getByRole("link", { name: "Skip to main content" });
+  await expect(skipLink).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#main-content")).toBeFocused();
+});
+
+test("tool feedback distinguishes errors from successful actions and keeps mobile targets usable", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 375, height: 760 });
+  await page.goto("/tools/json-formatter", { waitUntil: "domcontentloaded" });
+
+  const jsonInput = page.getByRole("textbox", { name: "JSON", exact: true });
+  await jsonInput.fill("{not valid}");
+  await page.getByRole("button", { name: "Format" }).click();
+  await expect(page.locator(".feedback-message[role='alert']")).toContainText("Invalid JSON");
+
+  await jsonInput.fill('{"private":true}');
+  await page.getByRole("button", { name: "Format" }).click();
+  await page.getByRole("button", { name: "Copy formatted JSON" }).click();
+  await expect(page.getByRole("status")).toContainText("Formatted JSON copied.");
+  await expect(page.locator(".feedback-message[role='alert']")).toHaveCount(0);
+
+  const targetSize = await page.getByRole("button", { name: "Copy formatted JSON" }).evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return { width: box.width, height: box.height };
+  });
+  expect(targetSize.width).toBeGreaterThanOrEqual(44);
+  expect(targetSize.height).toBeGreaterThanOrEqual(44);
+});
+
   for (const tool of readyTools) {
   test(`${tool.name} has a usable release shell`, async ({ page }) => {
     const response = await page.goto(`/tools/${tool.slug}`, { waitUntil: "domcontentloaded" });
@@ -329,7 +402,7 @@ test("the optional password breach check sends only a padded hash prefix", async
   await page.getByRole("button", { name: "Check breach corpus" }).click();
 
   await expect(page.getByRole("heading", { name: "Found in the breach corpus" })).toBeVisible();
-  await expect(page.getByText(/3,861,493 times/)).toBeVisible();
+  await expect(page.getByText(/3[,.\s ]?861[,.\s ]?493 times/)).toBeVisible();
   expect(requests).toEqual([
     {
       url: `${PWNED_PASSWORDS_RANGE_URL}/5BAA6`,

@@ -238,6 +238,18 @@ Implementation files: `app/tools/video-toolkit/page.tsx`, `components/tools/vide
 
 Local verification: lint, typecheck, production build, and production dependency audit pass; 315 unit tests and all 59 Chromium browser tests pass. The browser tests exercise a real WebM-to-H.264 MP4 conversion, JPEG thumbnail export, cancellation, the same-origin CSP boundary, source metadata removal, mobile layout, offline behavior, and every released tool shell. Firefox and WebKit remain CI checks because their matching browser binaries are not installed on this host.
 
+### V1.9 — Interface polish and motion system
+
+V1.9 gives the full site one restrained motion language without adding a client-side animation dependency. Shared CSS tokens define fast interaction feedback, panel transitions, and page introductions. The homepage hero and privacy promise reveal in sequence, tool grids use a short capped stagger, tool pages preserve context with calm content and sidebar entrances, and locally generated results appear without abrupt layout changes. The header remains visible with a subtle glass treatment, while cards, buttons, navigation, filters, file-drop surfaces, and progress bars provide consistent tactile feedback.
+
+Motion is limited to short opacity and transform changes and never conveys a security or privacy result by itself. There are no autoplay loops, parallax effects, shaking errors, or scroll-triggered replay. The existing global `prefers-reduced-motion` boundary now covers every new animation and transition, removes delays, and preserves full opacity and workflow usability. Release verification checks both the normal animation hook and the reduced-motion computed styles.
+
+The navigation follow-up adds a visible active-page state, keeps all primary destinations available through a compact mobile menu, closes that menu with Escape while returning focus to its trigger, and adds a keyboard-first skip link across every standard page shell. Theme-icon and menu entrances use the same short motion tokens and become effectively instant when reduced motion is requested.
+
+The final interaction-consistency pass introduces one shared feedback pattern for neutral progress, successful copy actions, and actionable errors, including matching icons, colors, and assistive-technology roles. Older generator and developer tools no longer present successful copies as errors. Generated result regions use the same restrained entrance, while buttons and inputs receive a 44-pixel minimum mobile target without inflating the desktop interface.
+
+Local verification: lint, strict typecheck, production build, and 315 unit tests pass; all 63 Chromium browser tests pass. Visual review covers the homepage in light mode, the full tools index in dark mode, a scrolled mobile tool page with the sticky header, and the expanded mobile navigation with its active-page treatment. Firefox and WebKit remain CI checks because their matching browser binaries are not installed on this host.
+
 ## 6. API contracts
 
 ### `GET /api/ip`

@@ -88,7 +88,7 @@ export function PhishingChecker() {
       </div>
 
       {assessment && risk && (
-        <div className="mt-7 space-y-5 border-t border-border/70 pt-6" aria-live="polite">
+        <div className="result-enter mt-7 space-y-5 border-t border-border/70 pt-6" aria-live="polite">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm text-muted-foreground">Explainable risk estimate</p>

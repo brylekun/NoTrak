@@ -156,7 +156,7 @@ export function ExifRemover() {
       </div>
 
       {(cleaned.length > 0 || failed.length > 0) && (
-        <div className="mt-7 space-y-3" aria-live="polite">
+        <div className="result-enter mt-7 space-y-3" aria-live="polite">
           <p className="text-sm text-muted-foreground" role="status">
             {cleaned.length} of {cleaned.length + failed.length} cleaned.
           </p>

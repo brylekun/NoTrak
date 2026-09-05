@@ -5,6 +5,7 @@ import { Check, Copy, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FeedbackMessage } from "@/components/ui/feedback-message";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { estimatePassphraseEntropy, generatePassphrase, type PassphraseOptions } from "@/lib/security/passphrase";
@@ -50,10 +51,10 @@ export function PassphraseGenerator() {
       <label htmlFor="generated-passphrase" className="text-sm font-semibold">Generated passphrase</label>
       <div className="mt-2 flex gap-2">
         <TextareaLike value={passphrase} />
-        <Button className="h-11 px-3" variant="outline" onClick={copy} aria-label="Copy passphrase">
+        <Button className="h-11 min-h-[44px] min-w-[44px] px-3" variant="outline" onClick={copy} aria-label="Copy passphrase">
           {message === "Passphrase copied." ? <Check /> : <Copy />}
         </Button>
-        <Button className="h-11 px-3" variant="outline" onClick={generate} aria-label="Generate another passphrase">
+        <Button className="h-11 min-h-[44px] min-w-[44px] px-3" variant="outline" onClick={generate} aria-label="Generate another passphrase">
           <RefreshCw />
         </Button>
       </div>
@@ -110,7 +111,7 @@ export function PassphraseGenerator() {
         <span className="text-muted-foreground">Estimated entropy</span>
         <span className="font-semibold text-primary">{estimatePassphraseEntropy(options.wordCount, options.includeNumber)} bits</span>
       </div>
-      <p className="mt-3 min-h-5 text-sm text-muted-foreground" aria-live="polite">{message}</p>
+      <FeedbackMessage className="mt-3" tone={message === "Passphrase copied." ? "success" : "error"}>{message}</FeedbackMessage>
     </div>
   );
 }

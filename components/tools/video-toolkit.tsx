@@ -271,7 +271,7 @@ export function VideoToolkit() {
         {(busy || progress > 0) && <div className="mt-4" aria-live="polite"><div className="flex justify-between gap-3 text-sm"><span>{stage || "Complete"}</span><span>{progress}%</span></div><progress className="mt-2 h-2 w-full accent-primary" max={100} value={progress}>{progress}%</progress></div>}
       </div>
 
-      {result && <section className="mt-7 border-t border-border/70 pt-6" aria-labelledby="result-video-heading"><h2 id="result-video-heading" className="text-lg font-semibold">Processed video</h2><video className="mt-3 max-h-[28rem] w-full rounded-2xl bg-black" src={result.url} controls preload="metadata">Your browser does not support video preview.</video><p className="mt-3 text-sm text-muted-foreground">MP4 · {formatByteSize(result.size)}</p><Button className="mt-4" nativeButton={false} render={<a href={result.url} download={result.name} />}><Download />Download {result.name}</Button></section>}
+      {result && <section className="result-enter mt-7 border-t border-border/70 pt-6" aria-labelledby="result-video-heading"><h2 id="result-video-heading" className="text-lg font-semibold">Processed video</h2><video className="mt-3 max-h-[28rem] w-full rounded-2xl bg-black" src={result.url} controls preload="metadata">Your browser does not support video preview.</video><p className="mt-3 text-sm text-muted-foreground">MP4 · {formatByteSize(result.size)}</p><Button className="mt-4" nativeButton={false} render={<a href={result.url} download={result.name} />}><Download />Download {result.name}</Button></section>}
     </>}
   </div>;
 }

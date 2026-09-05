@@ -71,7 +71,7 @@ export function BrowserPrivacyCheck() {
       </Button>
 
       {snapshot && assessment && (
-        <div className="mt-7" aria-live="polite">
+        <div className="result-enter mt-7" aria-live="polite">
           <div className="rounded-2xl border border-primary/20 bg-primary/6 p-5">
             <div className="flex items-start gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary"><ShieldAlert /></span>

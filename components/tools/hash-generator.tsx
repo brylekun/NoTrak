@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Copy, FileKey2, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { FeedbackMessage } from "@/components/ui/feedback-message";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatByteSize, HASH_ALGORITHMS, hashText, type HashAlgorithm } from "@/lib/crypto/hash";
@@ -149,20 +150,18 @@ export function HashGenerator() {
       </div>
 
       {digest && (
-        <div className="mt-7 border-t border-border/70 pt-6" aria-live="polite">
+        <div className="result-enter mt-7 border-t border-border/70 pt-6" aria-live="polite">
           <label htmlFor="hash-result" className="text-sm font-semibold">{algorithm} hash</label>
           <div className="mt-2 flex gap-2">
             <Textarea id="hash-result" className="min-h-24 break-all font-mono text-sm" value={digest} readOnly spellCheck={false} />
-            <Button className="h-10 shrink-0 px-3" variant="outline" onClick={copyDigest} aria-label="Copy hash">
+            <Button className="h-11 min-h-[44px] min-w-[44px] shrink-0 px-3" variant="outline" onClick={copyDigest} aria-label="Copy hash">
               {message === "Hash copied." ? <Check /> : <Copy />}
             </Button>
           </div>
         </div>
       )}
 
-      <p className={`mt-4 min-h-5 text-sm ${digest ? "text-muted-foreground" : "text-destructive"}`} role={digest ? undefined : "alert"} aria-live="polite">
-        {message}
-      </p>
+      <FeedbackMessage className="mt-4" tone={message === "Hash copied." ? "success" : "error"}>{message}</FeedbackMessage>
     </div>
   );
 }

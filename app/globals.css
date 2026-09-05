@@ -73,6 +73,11 @@
   --chart-4: oklch(0.56 0.12 290);
   --chart-5: oklch(0.64 0.15 34);
   --radius: 0.875rem;
+  --motion-fast: 140ms;
+  --motion-medium: 220ms;
+  --motion-slow: 320ms;
+  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
   --sidebar: oklch(0.97 0.012 190);
   --sidebar-foreground: oklch(0.19 0.025 236);
   --sidebar-primary: oklch(0.48 0.12 174);
@@ -137,7 +142,45 @@
 
 @layer components {
   .nav-link {
-    @apply rounded-lg px-3 py-2 font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply rounded-lg px-3 py-2 font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    transition: color var(--motion-fast) ease, background-color var(--motion-fast) ease, transform var(--motion-fast) var(--motion-ease-standard);
+  }
+
+  .nav-link:hover {
+    transform: translateY(-1px);
+  }
+
+  .nav-link:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .nav-link-active {
+    @apply bg-primary/10 text-foreground;
+    box-shadow: inset 0 -2px 0 color-mix(in oklch, var(--primary) 72%, transparent);
+  }
+
+  .skip-link {
+    @apply fixed left-4 top-3 z-[100] rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    transform: translateY(calc(-100% - 1rem));
+    transition: transform var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .skip-link:focus {
+    transform: translateY(0);
+  }
+
+  .mobile-nav-panel {
+    animation: notrak-menu-enter var(--motion-medium) var(--motion-ease-out) both;
+    transform-origin: top right;
+  }
+
+  .theme-icon {
+    animation: notrak-icon-swap var(--motion-fast) var(--motion-ease-out) both;
+  }
+
+  .feedback-message:not(:empty) {
+    @apply flex items-start gap-2;
+    animation: notrak-result-enter var(--motion-medium) var(--motion-ease-out) both;
   }
 
   .ambient-grid {
@@ -162,7 +205,12 @@
   }
 
   .tool-card {
-    @apply flex min-h-72 flex-col rounded-3xl border border-border/80 bg-card p-6 shadow-[0_18px_55px_-45px_color-mix(in_oklch,var(--foreground),transparent_45%)] transition-all hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_24px_65px_-42px_color-mix(in_oklch,var(--primary),transparent_55%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply flex min-h-72 flex-col rounded-3xl border border-border/80 bg-card p-6 shadow-[0_18px_55px_-45px_color-mix(in_oklch,var(--foreground),transparent_45%)] hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_24px_65px_-42px_color-mix(in_oklch,var(--primary),transparent_55%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    transition: transform var(--motion-medium) var(--motion-ease-out), border-color var(--motion-medium) ease, box-shadow var(--motion-medium) var(--motion-ease-out);
+  }
+
+  .tool-card:active {
+    transform: translateY(-1px) scale(0.995);
   }
 
   .dark .tool-card {
@@ -174,7 +222,12 @@
   }
 
   .tool-icon {
-    @apply grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground;
+    @apply grid size-11 place-items-center rounded-2xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground;
+    transition: color var(--motion-medium) ease, background-color var(--motion-medium) ease, transform var(--motion-medium) var(--motion-ease-out);
+  }
+
+  .tool-card:hover .tool-icon {
+    transform: scale(1.04) rotate(-2deg);
   }
 
   .mode-local,
@@ -224,6 +277,122 @@
   .surface-withheld {
     @apply bg-primary/10 text-primary;
   }
+
+  .motion-reveal,
+  .motion-grid > *,
+  .result-enter {
+    animation-duration: var(--motion-slow);
+    animation-timing-function: var(--motion-ease-out);
+    animation-fill-mode: both;
+  }
+
+  .motion-reveal,
+  .motion-grid > * {
+    animation-name: notrak-reveal;
+  }
+
+  .result-enter {
+    animation-name: notrak-result-enter;
+  }
+
+  .motion-delay-1,
+  .motion-grid > :nth-child(2) {
+    animation-delay: 55ms;
+  }
+
+  .motion-delay-2,
+  .motion-grid > :nth-child(3) {
+    animation-delay: 110ms;
+  }
+
+  .motion-delay-3,
+  .motion-grid > :nth-child(4) {
+    animation-delay: 165ms;
+  }
+
+  .motion-grid > :nth-child(5) {
+    animation-delay: 220ms;
+  }
+
+  .motion-grid > :nth-child(n + 6) {
+    animation-delay: 260ms;
+  }
+
+  progress {
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--muted);
+  }
+
+  progress::-webkit-progress-bar {
+    background: var(--muted);
+  }
+
+  progress::-webkit-progress-value {
+    border-radius: 999px;
+    background: var(--primary);
+    transition: width var(--motion-medium) var(--motion-ease-standard);
+  }
+
+  progress::-moz-progress-bar {
+    border-radius: 999px;
+    background: var(--primary);
+  }
+}
+
+@media (max-width: 639px) {
+  [data-slot="button"] {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+
+  [data-slot="input"] {
+    min-height: 2.75rem;
+  }
+}
+
+@keyframes notrak-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes notrak-result-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes notrak-menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes notrak-icon-swap {
+  from {
+    opacity: 0;
+    transform: rotate(-12deg) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -238,5 +407,15 @@
 
   .tool-card:hover {
     transform: none;
+  }
+
+  .motion-reveal,
+  .motion-grid > *,
+  .result-enter,
+  .mobile-nav-panel,
+  .theme-icon,
+  .feedback-message:not(:empty) {
+    animation-delay: 0ms !important;
+    transform: none !important;
   }
 }

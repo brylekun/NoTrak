@@ -17,6 +17,7 @@ type BreachResult =
   | { status: "not-found"; count: 0 };
 
 const MAX_RANGE_RESPONSE_BYTES = 512 * 1024;
+const BREACH_COUNT_FORMATTER = new Intl.NumberFormat("en-US");
 
 function strengthColor(score: number) {
   if (score < 40) return "bg-destructive";
@@ -134,7 +135,7 @@ export function PasswordSafetyChecker() {
       </div>
 
       {password && (
-        <section className="mt-7 border-t border-border/70 pt-6" aria-live="polite">
+        <section className="result-enter mt-7 border-t border-border/70 pt-6" aria-live="polite">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-sm text-muted-foreground">Local strength estimate</p>
@@ -203,7 +204,7 @@ export function PasswordSafetyChecker() {
       </div>
 
       {breachResult && (
-        <section className={`mt-7 rounded-2xl border p-5 ${breachResult.status === "found" ? "border-destructive/30 bg-destructive/5" : "border-primary/20 bg-primary/6"}`} aria-live="polite">
+        <section className={`result-enter mt-7 rounded-2xl border p-5 ${breachResult.status === "found" ? "border-destructive/30 bg-destructive/5" : "border-primary/20 bg-primary/6"}`} aria-live="polite">
           <div className="flex items-start gap-3">
             {breachResult.status === "found"
               ? <AlertTriangle className="mt-0.5 size-6 shrink-0 text-destructive" aria-hidden="true" />
@@ -214,7 +215,7 @@ export function PasswordSafetyChecker() {
               </h2>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
                 {breachResult.status === "found"
-                  ? `This password appears ${breachResult.count.toLocaleString()} times in the provider’s corpus. Do not use it; replace it anywhere it is active.`
+                  ? `This password appears ${BREACH_COUNT_FORMATTER.format(breachResult.count)} times in the provider’s corpus. Do not use it; replace it anywhere it is active.`
                   : "No matching hash was returned. This does not prove the password is safe, unique, or absent from every breach."}
               </p>
             </div>

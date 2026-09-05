@@ -145,7 +145,7 @@ export function ImageCompressor() {
       </div>
 
       {result && file && (
-        <div className="mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
+        <div className="result-enter mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
           <p className="font-semibold">Compressed copy ready</p>
           <div className="mt-3 grid grid-cols-3 gap-3 text-center text-sm">
             <div className="rounded-xl bg-background/70 p-3"><p className="font-semibold">{formatByteSize(file.size)}</p><p className="mt-1 text-xs text-muted-foreground">Original</p></div>

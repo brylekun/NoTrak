@@ -5,6 +5,7 @@ import { Check, Copy, RefreshCw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FeedbackMessage } from "@/components/ui/feedback-message";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -84,10 +85,10 @@ export function PasswordGenerator() {
       <label htmlFor="generated-password" className="text-sm font-semibold">Generated password</label>
       <div className="mt-2 flex gap-2">
         <Input id="generated-password" className="h-11 font-mono text-base" value={password} readOnly spellCheck={false} />
-        <Button className="h-11 px-3" variant="outline" onClick={copyPassword} aria-label="Copy password">
+        <Button className="h-11 min-h-[44px] min-w-[44px] px-3" variant="outline" onClick={copyPassword} aria-label="Copy password">
           {message.startsWith("Copied") ? <Check /> : <Copy />}
         </Button>
-        <Button className="h-11 px-3" variant="outline" onClick={createPassword} aria-label="Generate another password">
+        <Button className="h-11 min-h-[44px] min-w-[44px] px-3" variant="outline" onClick={createPassword} aria-label="Generate another password">
           <RefreshCw />
         </Button>
       </div>
@@ -131,7 +132,7 @@ export function PasswordGenerator() {
         <span className="text-muted-foreground">Estimated entropy</span>
         <span className="font-semibold text-primary">{entropy} bits</span>
       </div>
-      <p className="mt-3 min-h-5 text-sm text-muted-foreground" aria-live="polite">{message}</p>
+      <FeedbackMessage className="mt-3" tone={message.startsWith("Copied") ? "success" : "error"}>{message}</FeedbackMessage>
     </div>
   );
 }

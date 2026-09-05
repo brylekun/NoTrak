@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Copy, Eye, EyeOff, LockKeyhole, RotateCcw, UnlockKeyhole } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { FeedbackMessage } from "@/components/ui/feedback-message";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { COPY_FALLBACK_MESSAGE, copyToClipboard } from "@/lib/clipboard";
@@ -150,20 +151,20 @@ export function TextEncryption() {
       </div>
 
       {output && (
-        <div className="mt-7 border-t border-border/70 pt-6" aria-live="polite">
+        <div className="result-enter mt-7 border-t border-border/70 pt-6" aria-live="polite">
           <label htmlFor="text-encryption-output" className="text-sm font-semibold">
             {action === "encrypt" ? "Encrypted message — copy or share carefully" : "Decrypted message"}
           </label>
           <div className="mt-2 flex gap-2">
             <Textarea id="text-encryption-output" className="min-h-32 break-all font-mono text-sm" value={output} readOnly />
-            <Button className="h-10 shrink-0 px-3" variant="outline" onClick={copyOutput} aria-label="Copy result">
+            <Button className="h-11 min-h-[44px] min-w-[44px] shrink-0 px-3" variant="outline" onClick={copyOutput} aria-label="Copy result">
               {message === "Result copied." ? <Check /> : <Copy />}
             </Button>
           </div>
         </div>
       )}
 
-      <p className="mt-4 min-h-5 text-sm text-destructive" role="alert" aria-live="polite">{message}</p>
+      <FeedbackMessage className="mt-4" tone={message === "Result copied." ? "success" : "error"}>{message}</FeedbackMessage>
       <div className="mt-2 rounded-xl bg-muted/70 p-4 text-xs leading-5 text-muted-foreground">
         Format: NoTrak text v1 · AES-256-GCM · PBKDF2-HMAC-SHA-256 · 600,000 iterations. Everything happens in this
         browser: the message, the password, and the derived key are never sent anywhere. Send the password through a

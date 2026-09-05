@@ -17,27 +17,27 @@ export function ToolShell({ tool, children, wide = false }: { tool: ToolDefiniti
     <div className="flex min-h-screen flex-col">
       <JsonLd data={toolBreadcrumbStructuredData(tool)} />
       <SiteHeader />
-      <main className="flex-1">
+      <main id="main-content" tabIndex={-1} className="flex-1">
         <div className={`mx-auto w-full ${wide ? "max-w-7xl" : "max-w-5xl"} px-5 py-8 sm:px-8 sm:py-12`}>
-          <Link href="/tools" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+          <Link href="/tools" className="motion-reveal inline-flex items-center gap-2 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none">
             <ArrowLeft className="size-4" aria-hidden="true" />
             All tools
           </Link>
 
           <div className={`mt-8 grid gap-8 ${wide ? "" : "lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start"}`}>
-            <div className="min-w-0">
+            <div className="motion-reveal motion-delay-1 min-w-0">
               <span className={tool.mode === "local" ? "mode-local" : "mode-external"}>
                 {tool.mode === "local" ? "Processed locally" : "External lookup"}
               </span>
               <h1 className="mt-4 text-balance text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">{tool.name}</h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">{tool.description}</p>
 
-              <div className="mt-8 rounded-3xl border border-border/80 bg-card p-5 shadow-[0_22px_70px_-52px_color-mix(in_oklch,var(--foreground),transparent_35%)] sm:p-7">
+              <div className="mt-8 rounded-3xl border border-border/80 bg-card p-5 shadow-[0_22px_70px_-52px_color-mix(in_oklch,var(--foreground),transparent_35%)] transition-shadow duration-300 hover:shadow-[0_28px_80px_-55px_color-mix(in_oklch,var(--primary),transparent_50%)] motion-reduce:transition-none sm:p-7">
                 {children}
               </div>
             </div>
 
-            <aside className={wide ? "grid min-w-0 gap-4 sm:grid-cols-2" : "min-w-0 lg:sticky lg:top-8"}>
+            <aside className={`${wide ? "grid min-w-0 gap-4 sm:grid-cols-2" : "min-w-0 lg:sticky lg:top-24"} motion-reveal motion-delay-2`}>
               <PrivacyNotice mode={tool.mode}>{tool.privacyNotice}</PrivacyNotice>
               <div className={`${wide ? "" : "mt-4"} rounded-2xl border border-border/70 p-4 text-sm text-muted-foreground`}>
                 <p className="font-semibold text-foreground">NoTrak rule</p>
@@ -46,7 +46,7 @@ export function ToolShell({ tool, children, wide = false }: { tool: ToolDefiniti
             </aside>
           </div>
 
-          <section aria-labelledby="about-this-tool" className="mt-12 border-t border-border/70 pt-10 sm:mt-16 sm:pt-12">
+          <section aria-labelledby="about-this-tool" className="motion-reveal mt-12 border-t border-border/70 pt-10 sm:mt-16 sm:pt-12">
             <p className="eyebrow">Practical guide</p>
             <h2 id="about-this-tool" className="mt-2 text-2xl font-semibold tracking-[-0.035em] sm:text-3xl">
               About {tool.name}

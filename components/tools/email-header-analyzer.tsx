@@ -101,7 +101,7 @@ export function EmailHeaderAnalyzer() {
       </div>
 
       {report && (
-        <div className="mt-7 space-y-6 border-t border-border/70 pt-6" aria-live="polite">
+        <div className="result-enter mt-7 space-y-6 border-t border-border/70 pt-6" aria-live="polite">
           <section className={`rounded-2xl border p-5 ${levelClass(report.level)}`}>
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>

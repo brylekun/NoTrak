@@ -59,7 +59,7 @@ export function ToolBrowser({ tools, categories }: { tools: ToolDefinition[]; ca
                 onClick={() => setFilter(item)}
                 aria-pressed={active}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none",
+                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-[transform,background-color,border-color,color] duration-150 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:active:transform-none",
                   active
                     ? "border-primary bg-primary text-primary-foreground"
                     : "border-border/70 text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -82,13 +82,13 @@ export function ToolBrowser({ tools, categories }: { tools: ToolDefinition[]; ca
       </p>
 
       {visible.length > 0 ? (
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="motion-grid mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((tool) => (
             <ToolCard key={tool.slug} tool={tool} />
           ))}
         </div>
       ) : (
-        <div className="mt-5 rounded-3xl border border-dashed border-border/80 p-10 text-center">
+        <div className="result-enter mt-5 rounded-3xl border border-dashed border-border/80 p-10 text-center">
           <p className="font-semibold">No tools match that search.</p>
           <p className="mt-2 text-sm text-muted-foreground">Try a shorter term, or clear the filters to see everything.</p>
         </div>
