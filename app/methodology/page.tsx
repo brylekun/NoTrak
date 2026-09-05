@@ -50,8 +50,16 @@ const methods = [
     body: "The browser removes standard document-information fields and catalog XMP metadata, saves a new PDF, reopens it, and verifies those fields are absent. Pages and visible content are preserved, but visible names, annotations, attachments, layers, and document text are not redacted.",
   },
   {
+    title: "Private resume building",
+    body: "Resume fields are held in tab memory and laid out locally using bundled fonts. The preview and exported PDF share the same measured lines and page breaks; PDF text remains selectable. Explicit draft downloads are unencrypted JSON files. No resume content is autosaved or uploaded. Supported scripts and page counts are bounded, and single-column formatting does not guarantee compatibility with every hiring system.",
+  },
+  {
     title: "PDF organization",
     body: "The browser copies selected pages into new PDF documents in the order and rotation shown. Combining, extracting, and splitting never change the selected originals or send them over the network. Page copying is not a lossless editor: digital signatures become invalid, and interactive forms, bookmarks, attachments, scripts, or other document-level features may not survive. Password-protected PDFs must be unlocked first.",
+  },
+  {
+    title: "Local video processing",
+    body: "The selected MP4 or WebM is held in browser memory and processed by a same-origin, single-thread WebAssembly build of FFmpeg. The source is never uploaded or fetched from a social platform. Trimming re-encodes a new H.264/AAC MP4, removes source metadata and chapters, and optionally center-crops, resizes, mutes, or adjusts volume. Thumbnail capture uses the browser canvas. File, duration, and pixel limits reduce memory failures, but encoding can still be slow or fail on resource-constrained devices, and estimated output sizes are not guarantees.",
   },
   {
     title: "Image processing",

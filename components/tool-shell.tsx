@@ -9,7 +9,7 @@ import { toolBreadcrumbStructuredData } from "@/lib/seo/structured-data";
 import { getToolGuide } from "@/lib/tools/guides";
 import { getTool, type ToolDefinition } from "@/lib/tools/registry";
 
-export function ToolShell({ tool, children }: { tool: ToolDefinition; children: React.ReactNode }) {
+export function ToolShell({ tool, children, wide = false }: { tool: ToolDefinition; children: React.ReactNode; wide?: boolean }) {
   const guide = getToolGuide(tool.slug);
   const relatedTools = guide.relatedSlugs.map((slug) => getTool(slug)).filter((entry) => entry !== undefined);
 
@@ -18,13 +18,13 @@ export function ToolShell({ tool, children }: { tool: ToolDefinition; children: 
       <JsonLd data={toolBreadcrumbStructuredData(tool)} />
       <SiteHeader />
       <main className="flex-1">
-        <div className="mx-auto w-full max-w-5xl px-5 py-8 sm:px-8 sm:py-12">
+        <div className={`mx-auto w-full ${wide ? "max-w-7xl" : "max-w-5xl"} px-5 py-8 sm:px-8 sm:py-12`}>
           <Link href="/tools" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
             <ArrowLeft className="size-4" aria-hidden="true" />
             All tools
           </Link>
 
-          <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start">
+          <div className={`mt-8 grid gap-8 ${wide ? "" : "lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-start"}`}>
             <div className="min-w-0">
               <span className={tool.mode === "local" ? "mode-local" : "mode-external"}>
                 {tool.mode === "local" ? "Processed locally" : "External lookup"}
@@ -37,9 +37,9 @@ export function ToolShell({ tool, children }: { tool: ToolDefinition; children: 
               </div>
             </div>
 
-            <aside className="min-w-0 lg:sticky lg:top-8">
+            <aside className={wide ? "grid min-w-0 gap-4 sm:grid-cols-2" : "min-w-0 lg:sticky lg:top-8"}>
               <PrivacyNotice mode={tool.mode}>{tool.privacyNotice}</PrivacyNotice>
-              <div className="mt-4 rounded-2xl border border-border/70 p-4 text-sm text-muted-foreground">
+              <div className={`${wide ? "" : "mt-4"} rounded-2xl border border-border/70 p-4 text-sm text-muted-foreground`}>
                 <p className="font-semibold text-foreground">NoTrak rule</p>
                 <p className="mt-1 leading-6">No accounts, saved history, advertising trackers, or cloud file storage.</p>
               </div>

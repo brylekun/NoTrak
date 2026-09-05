@@ -7,6 +7,20 @@ export type ToolGuide = {
 };
 
 export const toolGuides: Record<string, ToolGuide> = {
+  "video-toolkit": {
+    summary: "Prepare a video you own for sharing without sending the source to a conversion service or connecting a social-media account.",
+    useCases: ["Trim and resize a short clip for a landscape, square, portrait, or vertical post.", "Compress a video, remove or adjust its audio, or capture the current preview frame as a thumbnail."],
+    howItWorks: "After you choose a browser-readable MP4 or WebM file, a single-thread WebAssembly build of FFmpeg loads from NoTrak's own origin and processes the video in browser memory. The result is a new MP4, while thumbnail capture uses the local browser canvas.",
+    limitations: "Local encoding is CPU- and memory-intensive and can take longer than the clip itself, especially on phones. Inputs are limited to 75 MB, 3 minutes, and 4K; output-size estimates are approximate. Center-cropping can remove edge content, upscaling cannot restore detail, and the visitor must own or have permission to process and share the video.",
+    relatedSlugs: ["image-compressor", "image-resizer", "remove-exif"],
+  },
+  "resume-builder": {
+    summary: "Build a readable, single-column resume while keeping your contact details and employment history on your device.",
+    useCases: ["Prepare a first resume or tailor an existing draft for a job application.", "Export a clean PDF without an account, watermark, or file upload."],
+    howItWorks: "Fill in the sections, choose Classic or Compact and A4 or Letter, and review the paginated preview. The preview and PDF use the same measured layout. Download a JSON draft to reopen and edit later; there is no automatic storage.",
+    limitations: "Review every page before sharing. Text is selectable, but compatibility with every applicant tracking system is not guaranteed. This version supports Latin, Greek, and Cyrillic text, not every writing system or emoji, and limits resumes to 8 pages. Draft files are unencrypted and contain your personal details.",
+    relatedSlugs: ["pdf-toolkit", "pdf-metadata-cleaner", "file-encryption"],
+  },
   "whats-my-ip": {
     summary: "See the public network address and coarse location that a normal website can observe for this connection.",
     useCases: ["Confirm whether a VPN or network change affected your public address.", "Share a public IP with a network administrator while troubleshooting."],

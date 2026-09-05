@@ -6,7 +6,11 @@
 
 Private browser tools with no accounts, file uploads, or saved history.
 
-NoTrak currently includes 28 tools for connection and reputation checks, password safety, sensitive-data redaction, local image-to-text OCR, email header analysis, secure generation, hashing, image, QR, and PDF processing, file and text encryption, browser privacy education, metadata inspection and removal, and developer utilities. Browse them all at `/tools`, which filters by category and searches by name.
+NoTrak currently includes 30 tools for connection and reputation checks, password safety, sensitive-data redaction, local image-to-text OCR, private resume building and video preparation, email header analysis, secure generation, hashing, image, QR, and PDF processing, file and text encryption, browser privacy education, metadata inspection and removal, and developer utilities. Browse them all at `/tools`, which filters by category and searches by name.
+
+The Private Resume Builder offers Classic and Compact single-column layouts, A4/Letter pages, a paginated live preview, selectable-text PDF export, and local JSON draft downloads/imports. Content is never autosaved or uploaded. Bundled OFL-licensed Noto Sans fonts support Latin, Greek, and Cyrillic; unsupported characters are rejected rather than silently dropped. Resumes are limited to eight pages, twelve entries per section, and 40,000 serialized draft characters. Draft files are unencrypted.
+
+The Private Video Toolkit accepts a browser-readable MP4 or WebM owned by the visitor and creates a new MP4 locally. It supports trimming, 720p/1080p output, original/16:9/1:1/4:5/9:16 framing, three quality levels, audio removal or volume adjustment, and JPEG thumbnail capture. Inputs are limited to 75 MB, 3 minutes, and 4K because WebAssembly video encoding is memory- and CPU-intensive. The roughly 31 MB single-thread engine is loaded from NoTrak's own origin only when processing starts and is excluded from the service worker's offline cache.
 
 The local tools keep working offline: NoTrak installs a service worker that caches only its own pages and assets. Running a tool with the network off demonstrates that its core processing does not depend on a server; the source code and network tests enforce the stronger no-input-transmission guarantee.
 

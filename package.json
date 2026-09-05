@@ -6,10 +6,12 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "prepare:assets": "node scripts/prepare-assets.mjs",
     "prepare:ocr": "node scripts/prepare-ocr-assets.mjs",
-    "predev": "node scripts/prepare-ocr-assets.mjs",
+    "prepare:video": "node scripts/prepare-video-assets.mjs",
+    "predev": "node scripts/prepare-assets.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/prepare-ocr-assets.mjs",
+    "prebuild": "node scripts/prepare-assets.mjs",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
@@ -23,6 +25,10 @@
   "dependencies": {
     "@base-ui/react": "^1.7.0",
     "@cloudflare/speedtest": "1.13.1",
+    "@ffmpeg/core": "0.12.10",
+    "@ffmpeg/ffmpeg": "0.12.15",
+    "@ffmpeg/util": "0.12.2",
+    "@pdf-lib/fontkit": "1.1.1",
     "@tesseract.js-data/eng": "1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

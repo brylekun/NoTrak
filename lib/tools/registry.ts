@@ -1,6 +1,6 @@
 export type ToolMode = "local" | "external-lookup";
 export type ToolStatus = "ready" | "planned";
-export type ToolIcon = "fingerprint" | "key" | "link-off" | "braces" | "lock" | "scan";
+export type ToolIcon = "fingerprint" | "key" | "link-off" | "braces" | "lock" | "scan" | "file-text" | "video";
 
 export type ToolCategory = "Network" | "Privacy" | "Security" | "Files" | "Developer";
 
@@ -18,6 +18,28 @@ export type ToolDefinition = {
 };
 
 export const toolRegistry: ToolDefinition[] = [
+  {
+    slug: "video-toolkit",
+    name: "Private Video Toolkit",
+    description: "Trim, resize, crop, compress, mute, and capture thumbnails from your own videos without uploading them.",
+    category: "Files",
+    mode: "local",
+    status: "ready",
+    icon: "video",
+    privacyNotice: "The selected video is read and processed in browser memory. It is never uploaded, and NoTrak does not fetch videos from social platforms.",
+    featured: true,
+  },
+  {
+    slug: "resume-builder",
+    name: "Private Resume Builder",
+    description: "Build a clean resume with a live preview and download a selectable-text PDF. No account or upload needed.",
+    category: "Files",
+    mode: "local",
+    status: "ready",
+    icon: "file-text",
+    privacyNotice: "Resume content and draft files are processed in your browser, not uploaded. Nothing is autosaved. Download a local draft to keep your work.",
+    featured: true,
+  },
   {
     slug: "whats-my-ip",
     name: "What’s My IP",

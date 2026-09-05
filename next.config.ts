@@ -32,6 +32,7 @@ const nextConfig: NextConfig = {
               "form-action 'self'",
               "frame-ancestors 'none'",
               "img-src 'self' data: blob: https://cdn.buymeacoffee.com",
+              "media-src 'self' blob:",
               "object-src 'none'",
               `script-src ${scriptSources.join(" ")}`,
               "style-src 'self' 'unsafe-inline'",

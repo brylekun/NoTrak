@@ -242,6 +242,7 @@ test("production security headers are present", async ({ page }) => {
   const headers = response?.headers() ?? {};
 
   expect(headers["content-security-policy"]).toContain("default-src 'self'");
+  expect(headers["content-security-policy"]).toContain("media-src 'self' blob:");
   expect(headers["content-security-policy"]).not.toContain("'unsafe-eval'");
   expect(headers["referrer-policy"]).toBe("no-referrer");
   expect(headers["x-content-type-options"]).toBe("nosniff");

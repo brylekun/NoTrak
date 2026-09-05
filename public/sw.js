@@ -102,6 +102,9 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   // Rule 1: reputation and IP lookups are never stored or replayed.
   if (url.pathname.startsWith("/api/")) return;
+  // The optional video engine is about 31 MB. Browser HTTP caching may reuse
+  // it, but the app's offline cache must not silently consume that space.
+  if (url.pathname.startsWith("/video-engine/")) return;
 
   if (request.mode === "navigate") {
     event.respondWith(networkFirstPage(request));

@@ -1,13 +1,13 @@
-# Third-party notices
+# Third-party runtime notices
 
-NoTrak uses the following directly integrated libraries for its browser tools. Each is distributed under the MIT License; consult the linked upstream project for its full license text and notices.
+NoTrak's Private Video Toolkit loads the following browser-only components from NoTrak's own origin when the visitor starts video processing:
 
-| Package | Version | Purpose | Upstream |
-| --- | --- | --- | --- |
-| `@cloudflare/speedtest` | 1.13.1 | Browser-side network measurements | <https://github.com/cloudflare/speedtest> |
-| `pdf-lib` | 1.17.1 | Local PDF metadata inspection and rewriting | <https://github.com/Hopding/pdf-lib> |
-| `qrcode` | 1.5.4 | Local QR code generation | <https://github.com/soldair/node-qrcode> |
-| `qr-scanner` | 1.4.2 | Local QR decoding from images and camera frames | <https://github.com/nimiq/qr-scanner> |
-| `zod` | 4.5.4 | Runtime validation at reputation API boundaries | <https://github.com/colinhacks/zod> |
+| Component | Version | License | Source |
+|---|---:|---|---|
+| `@ffmpeg/ffmpeg` | 0.12.15 | MIT | <https://github.com/ffmpegwasm/ffmpeg.wasm/releases> |
+| `@ffmpeg/util` | 0.12.2 | MIT | <https://github.com/ffmpegwasm/ffmpeg.wasm/releases> |
+| `@ffmpeg/core` | 0.12.10 | GPL-2.0-or-later | <https://github.com/ffmpegwasm/ffmpeg.wasm/releases> |
 
-These notices do not replace the license files included with installed packages.
+The generated `public/video-engine/0.12.10/` assets are unmodified copies of the UMD JavaScript loader and WebAssembly binary distributed in `@ffmpeg/core@0.12.10`. The package is pinned in `package.json` and `pnpm-lock.yaml`. Corresponding upstream source, build scripts, license information, and bundled-library versions are available in the public ffmpeg.wasm project and its release history linked above. NoTrak does not claim authorship of FFmpeg, ffmpeg.wasm, x264, or their bundled libraries.
+
+The resume builder's unmodified Noto Sans font files, copyright statement, upstream location, and SIL Open Font License 1.1 are recorded under `public/fonts/resume/`.

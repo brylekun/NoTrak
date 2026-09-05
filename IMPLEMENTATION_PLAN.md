@@ -218,6 +218,26 @@ V1.6 adds Image to Text, bringing the released set to 28. Visitors can choose, d
 
 The result remains editable and can be copied, downloaded as text, or taken to the Sensitive Data Redactor. The interface reports model confidence only as an estimate and requires the visitor to verify important text against the original. Files are capped at 15 MB and 40 megapixels to bound browser memory use; the first version supports printed English rather than handwriting or multilingual recognition.
 
+### V1.7 — Private Resume Builder
+
+The 29th tool adds a browser-only resume editor with contact details, summary, experience, education, skills, and projects. Visitors can hide sections, reorder sections and entries, switch Classic/Compact templates and A4/Letter paper sizes, and view actual page boundaries. One measured layout drives both the SVG preview and selectable-text PDF export with safe HTTP(S) and email link annotations. No watermark or ATS compatibility guarantee is added.
+
+Drafts can be explicitly downloaded and reopened as versioned JSON files; no resume content is automatically persisted or uploaded. Imports validate schema, unique IDs, field lengths, a 256 KB file limit, and 40,000 total serialized characters. The editor warns about unsaved work and confirms destructive replacements. Exports cap output at eight pages and twelve entries per section. Same-origin OFL-licensed Noto Sans fonts are bundled, and unsupported characters produce a visible error instead of silent glyph loss.
+
+Implementation files: `app/tools/resume-builder/page.tsx`, `components/tools/resume-builder.tsx`, `lib/resume/model.ts`, `lib/resume/pdf.ts`, and `public/fonts/resume/`. Release verification covers draft roundtrips, page wrapping, hidden/reordered sections, PDF links and text, desktop/mobile previews, and no processing requests. Production deployment and live smoke checks remain operator steps after commit/push approval.
+
+Local verification: lint, typecheck, and the production build pass; 302 unit tests and all 55 Chromium browser tests pass. Classic, Compact, and a two-page export were rendered and visually inspected, and PDF text was extracted successfully. The browser checks cover desktop/mobile layout and an offline edit/export after assets load. Firefox and WebKit were not run for this change because their matching browser binaries are not installed on this host; those checks remain for CI or a suitably provisioned host.
+
+### V1.8 — Private Video Toolkit
+
+The 30th tool adds local preparation for videos the visitor owns. It accepts browser-readable MP4 and WebM inputs, trims a selected range, exports H.264/AAC MP4 at 720p or 1080p, offers original, 16:9, 1:1, 4:5, and 9:16 framing, and supports high/balanced/smaller-file compression, audio removal, volume adjustment, and JPEG thumbnail capture. Center-crop and upscaling warnings remain visible, and the output-size estimate is explicitly approximate.
+
+Processing uses a lazily loaded, same-origin, single-thread FFmpeg WebAssembly engine and never sends the source or result to NoTrak, a social platform, or a conversion provider. The original is untouched. Inputs are capped at 75 MB, 3 minutes, 4K, and 8.3 megapixels to reduce browser-memory failures. The interface warns that local encoding may take longer than the clip and supports cancellation. The 31 MB engine is excluded from the service worker cache so a visitor does not silently lose that storage; it remains active in memory for repeated work in the same tab.
+
+Implementation files: `app/tools/video-toolkit/page.tsx`, `components/tools/video-toolkit.tsx`, `lib/video/toolkit.ts`, and `scripts/prepare-video-assets.mjs`. Release checks cover file and metadata limits, output dimensions and arguments, trim validation, safe names, actual local MP4 output, thumbnail export, no processing request, mobile layout, cancellation, metadata removal, and the unchanged wider release suite.
+
+Local verification: lint, typecheck, production build, and production dependency audit pass; 315 unit tests and all 59 Chromium browser tests pass. The browser tests exercise a real WebM-to-H.264 MP4 conversion, JPEG thumbnail export, cancellation, the same-origin CSP boundary, source metadata removal, mobile layout, offline behavior, and every released tool shell. Firefox and WebKit remain CI checks because their matching browser binaries are not installed on this host.
+
 ## 6. API contracts
 
 ### `GET /api/ip`
