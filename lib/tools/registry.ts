@@ -1,6 +1,6 @@
 export type ToolMode = "local" | "external-lookup";
 export type ToolStatus = "ready" | "planned";
-export type ToolIcon = "fingerprint" | "key" | "link-off" | "braces" | "lock" | "scan" | "file-text" | "video";
+export type ToolIcon = "fingerprint" | "key" | "link-off" | "braces" | "lock" | "scan" | "file-text" | "video" | "archive";
 
 export type ToolCategory = "Network" | "Privacy" | "Security" | "Files" | "Developer";
 
@@ -18,6 +18,17 @@ export type ToolDefinition = {
 };
 
 export const toolRegistry: ToolDefinition[] = [
+  {
+    slug: "zip-toolkit",
+    name: "ZIP Toolkit",
+    description: "Create, inspect, and extract ZIP archives without uploading your files.",
+    category: "Files",
+    mode: "local",
+    status: "ready",
+    icon: "archive",
+    privacyNotice: "Archive contents and filenames are compressed, inspected, and extracted only in your browser.",
+    featured: true,
+  },
   {
     slug: "audio-toolkit",
     name: "Private Audio Toolkit",

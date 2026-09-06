@@ -264,6 +264,12 @@ The tool reuses the same lazily loaded, same-origin, single-thread FFmpeg WebAss
 
 Local verification: lint, strict typecheck, production build, and 322 unit tests pass; all 70 Chromium browser tests pass. A real WAV fixture is trimmed, loudness-normalized, volume-adjusted, faded, converted to mono, and encoded to MP3 without a processing request. Container inspection confirms the requested 1.25-second duration and the absence of source metadata. The focused suite also checks invalid input and phone-width layout.
 
+### V1.12 — ZIP Toolkit
+
+The 33rd tool creates and extracts standard ZIP archives entirely in a browser worker. Archive creation accepts up to 500 files, 100 MB per file, and 200 MB total, offers store, balanced, and maximum compression, resolves duplicate filenames, and uses a fixed archive timestamp instead of copying source timestamps.
+
+Before extraction, the tool reads the central directory without expanding file content. It rejects password-protected, multi-part, ZIP64, unsupported-compression, malformed, excessive-count, and oversized archives, including files that would expand beyond 100 MB individually or 250 MB in total. Absolute paths, parent traversal, Windows drive prefixes, control characters, and duplicate download names are normalized. The tool still warns that a valid archive can contain unsafe files and that ZIP compression is not encryption.
+
 ## 6. API contracts
 
 ### `GET /api/ip`
@@ -451,6 +457,15 @@ Implementation status: implemented and verified with 277 unit tests and 48 brows
 
 Implementation status: implemented and verified with 282 unit tests and 50 browser-test definitions. All 98 applicable Chromium and Firefox checks passed, with the same two documented Firefox engine-specific skips described above. The browser workflow performs real local OCR, exports the recognized text, proves no processing request is issued, then repeats recognition with the network disabled using cached application assets.
 
+### Phase 10 — V1.12 local ZIP archives
+
+1. Create standard ZIP archives locally with bounded inputs, duplicate-name handling, selectable compression, and source-timestamp removal.
+2. Inspect each archive directory before extraction and reject encrypted, multi-part, ZIP64, unsupported, malformed, excessive-count, and oversized-expanded input.
+3. Normalize unsafe paths and duplicate download names, clearly warn that ZIP is not encryption or malware protection, and prove the workflow sends no processing request.
+4. Add the tool to registry-driven discovery, metadata, sitemap, practical-guide, dependency-notice, unit-test, and cross-browser surfaces.
+
+Implementation status: implemented; full release verification is pending.
+
 ### Deferred by decision — nonce-based Content Security Policy
 
 `script-src` still carries `'unsafe-inline'`. A nonce was implemented and measured, then reverted, because it is mutually exclusive with offline support:
@@ -516,6 +531,7 @@ The trade is a strict `script-src` against offline availability, CDN caching, an
 | M7 — V1.4 local email header analysis | Local header unfolding, delivery-chain reconstruction, reported-authentication parsing, and explained sender mismatch signals | Header analysis issues no request of any kind, never presents a reported verdict as verification or a clean report as proof of legitimacy, and all 26 tools pass the release gate |
 | M8 — V1.5 local sensitive-data redaction | Conservative local detection, per-finding review, consistent placeholders, and sanitized copy/download | Redaction issues no request, payment-card findings pass Luhn validation, a clean scan carries an explicit limitation, and all 27 tools pass the release gate |
 | M9 — V1.6 local image-to-text recognition | Local OCR engine and English model, upload/paste input, crop, rotation, editable result, and text download | Recognition issues no processing request, the result carries an accuracy limitation, cached OCR assets work offline, and all 28 tools pass the release gate |
+| M10 — V1.12 local ZIP archives | Local archive creation, preflight inspection, safe extraction, and per-file downloads | ZIP inputs and outputs remain local, unsafe paths and oversized expansion are rejected, and all 33 tools pass the release gate |
 
 ## 13. Deployment notes
 

@@ -6,7 +6,7 @@
 
 Private browser tools with no accounts, file uploads, or saved history.
 
-NoTrak currently includes 32 tools for connection and reputation checks, password safety, sensitive-data redaction, local image-to-text OCR, private document scanning, resume building, audio and video preparation, email header analysis, secure generation, hashing, image, QR, and PDF processing, file and text encryption, browser privacy education, metadata inspection and removal, and developer utilities. Browse them all at `/tools`, which filters by category and searches by name.
+NoTrak currently includes 33 tools for connection and reputation checks, password safety, sensitive-data redaction, local image-to-text OCR, private document scanning, ZIP archives, resume building, audio and video preparation, email header analysis, secure generation, hashing, image, QR, and PDF processing, file and text encryption, browser privacy education, metadata inspection and removal, and developer utilities. Browse them all at `/tools`, which filters by category and searches by name.
 
 The Private Resume Builder offers Classic and Compact single-column layouts, A4/Letter pages, a paginated live preview, selectable-text PDF export, and local JSON draft downloads/imports. Content is never autosaved or uploaded. Bundled OFL-licensed Noto Sans fonts support Latin, Greek, and Cyrillic; unsupported characters are rejected rather than silently dropped. Resumes are limited to eight pages, twelve entries per section, and 40,000 serialized draft characters. Draft files are unencrypted.
 
@@ -15,6 +15,8 @@ The Private Video Toolkit accepts a browser-readable MP4 or WebM owned by the vi
 The Private Audio Toolkit accepts browser-readable MP3, M4A, AAC, WAV, OGG, and WebM audio owned by the visitor. It trims and exports MP3, M4A, or WAV; adjusts volume; normalizes loudness; converts to mono; adds fades; and removes source metadata locally. Inputs are limited to 75 MB and 30 minutes. It reuses the same lazily loaded, same-origin FFmpeg engine as the video toolkit.
 
 The Private Document Scanner combines up to twelve JPEG, PNG, or WebP photos into an A4 or US Letter PDF. Pages can be reordered, rotated, and converted to grayscale or higher-contrast document treatment. Optional printed-English OCR uses the bundled local recognition engine to add searchable text. Source images are re-encoded to remove common camera metadata; nothing is uploaded.
+
+The ZIP Toolkit creates standard archives from multiple local files and safely inspects and extracts existing ZIP files in a browser worker. It rejects encrypted, multi-part, ZIP64, unsupported-compression, excessive-count, and oversized-expanded archives before extraction. Unsafe archive paths are normalized before downloads, and source timestamps are not copied into newly created archives. ZIP is compression rather than encryption; use File Encryption separately for confidentiality.
 
 The local tools keep working offline: NoTrak installs a service worker that caches only its own pages and assets. Running a tool with the network off demonstrates that its core processing does not depend on a server; the source code and network tests enforce the stronger no-input-transmission guarantee.
 

@@ -7,6 +7,13 @@ export type ToolGuide = {
 };
 
 export const toolGuides: Record<string, ToolGuide> = {
+  "zip-toolkit": {
+    summary: "Bundle files into a standard ZIP archive or inspect and extract an archive within clear safety limits while keeping every filename and byte on your device.",
+    useCases: ["Compress several documents or photos into one convenient download.", "Review an unfamiliar ZIP file list and extract only the files you expect."],
+    howItWorks: "A local browser worker uses a bundled ZIP engine to compress or extract files. Before extraction, NoTrak reads the archive directory and rejects unsupported encryption, unsafe paths, excessive file counts, and oversized expanded content.",
+    limitations: "ZIP compression does not encrypt files or prove they are safe. Password-protected, multi-part, ZIP64, and uncommon compression methods are not supported, and large archives can still use substantial device memory.",
+    relatedSlugs: ["file-encryption", "pdf-toolkit", "hash-generator"],
+  },
   "audio-toolkit": {
     summary: "Prepare audio you own for sharing, listening, or archiving without sending the recording to a conversion service.",
     useCases: ["Trim a voice note, interview, music demo, or podcast excerpt.", "Convert audio to MP3, M4A, or WAV, normalize loudness, make it mono, adjust volume, or add clean fades."],
