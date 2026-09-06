@@ -132,6 +132,7 @@ tests/
 |---|---|---|
 | What's My IP | `/api/ip` | IP plus available approximate Vercel geolocation headers; no ISP/VPN claims |
 | Speed Test | Browser + Cloudflare endpoints | Download, upload, ping, jitter, loaded latency; never proxy traffic through Vercel |
+| DNS & Domain Inspector | Local parsing + browser-direct Cloudflare DNS-over-HTTPS | Remove URL paths locally; explicit confirmation; public DNS answers are not ownership or safety proof |
 | Tracking URL Cleaner | Browser | Remove known tracking parameters; preview before copy |
 | EXIF Metadata Remover | Browser | Re-encode safely and let the user download a new file |
 | Image Compressor | Browser | Canvas or a focused client library; preserve the original |
@@ -270,6 +271,12 @@ The 33rd tool creates and extracts standard ZIP archives entirely in a browser w
 
 Before extraction, the tool reads the central directory without expanding file content. It rejects password-protected, multi-part, ZIP64, unsupported-compression, malformed, excessive-count, and oversized archives, including files that would expand beyond 100 MB individually or 250 MB in total. Absolute paths, parent traversal, Windows drive prefixes, control characters, and duplicate download names are normalized. The tool still warns that a valid archive can contain unsafe files and that ZIP compression is not encryption.
 
+### V1.13 — DNS & Domain Inspector
+
+The 34th tool parses a public domain or HTTP(S) URL locally, strips credentials, ports, paths, query strings, and fragments, and shows the normalized hostname before any lookup. It rejects IP addresses and local-only names. After a separate confirmation, the browser sends only that hostname and the selected A, AAAA, CNAME, MX, NS, TXT, CAA, or SOA record type directly to Cloudflare's public DNS-over-HTTPS JSON endpoint. NoTrak does not proxy the request or contact the submitted website.
+
+The result reports the resolver response, returned records, TTLs, truncation flag, and DNSSEC authenticated-data flag. Copy and tests state the important limits: recursive DNS is a time-sensitive public view, a missing answer does not prove a service is unavailable, an unsigned response is not automatically malicious, and the tool does not prove ownership, enumerate subdomains, or replace authoritative DNS and registrar tools.
+
 ## 6. API contracts
 
 ### `GET /api/ip`
@@ -313,6 +320,7 @@ Validate the exact format, query MalwareBazaar, normalize its response, and retu
 |---|---|---|
 | Vercel | Hosting, functions, request/geolocation headers | Hobby limits and allowed use must be checked before launch |
 | `@cloudflare/speedtest` | Browser-side speed measurements | Test payload goes between the browser and Cloudflare, not Vercel |
+| Cloudflare Public DNS | Browser-direct public DNS record lookup | Normalized domain and selected record type are sent only after confirmation; Cloudflare also receives the visitor IP |
 | Google Safe Browsing | Known malicious/phishing URL lookup | Server-only key; confirm current eligibility and terms |
 | URLhaus | Malicious URL intelligence | Confirm current API/auth, attribution, and rate limits |
 | MalwareBazaar | SHA-256 reputation | Hash only; confirm current API/auth, attribution, and rate limits |
@@ -466,6 +474,15 @@ Implementation status: implemented and verified with 282 unit tests and 50 brows
 
 Implementation status: implemented; full release verification is pending.
 
+### Phase 11 — V1.13 DNS and domain inspection
+
+1. Normalize a public domain or HTTP(S) URL locally and show the exact hostname while removing all URL-specific content before lookup.
+2. Require explicit confirmation before sending the hostname and one record type directly to a fixed DNS-over-HTTPS resolver.
+3. Validate the untrusted resolver response, display records and TTLs, and explain the precise meaning and limits of DNSSEC authenticated data.
+4. Cover normalization, malformed input, provider failures, consent, request shape, CSP, responsive layout, registry discovery, sitemap, methodology, privacy, and provider notices.
+
+Implementation status: implemented; full release verification is pending.
+
 ### Deferred by decision — nonce-based Content Security Policy
 
 `script-src` still carries `'unsafe-inline'`. A nonce was implemented and measured, then reverted, because it is mutually exclusive with offline support:
@@ -532,6 +549,7 @@ The trade is a strict `script-src` against offline availability, CDN caching, an
 | M8 — V1.5 local sensitive-data redaction | Conservative local detection, per-finding review, consistent placeholders, and sanitized copy/download | Redaction issues no request, payment-card findings pass Luhn validation, a clean scan carries an explicit limitation, and all 27 tools pass the release gate |
 | M9 — V1.6 local image-to-text recognition | Local OCR engine and English model, upload/paste input, crop, rotation, editable result, and text download | Recognition issues no processing request, the result carries an accuracy limitation, cached OCR assets work offline, and all 28 tools pass the release gate |
 | M10 — V1.12 local ZIP archives | Local archive creation, preflight inspection, safe extraction, and per-file downloads | ZIP inputs and outputs remain local, unsafe paths and oversized expansion are rejected, and all 33 tools pass the release gate |
+| M11 — V1.13 DNS and domain inspection | Local domain normalization plus an explicitly confirmed browser-direct public DNS lookup | URL-specific content never leaves the device, the website is never contacted, responses are presented without ownership or safety claims, and all 34 tools pass the release gate |
 
 ## 13. Deployment notes
 

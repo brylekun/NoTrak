@@ -1,6 +1,6 @@
 export type ToolMode = "local" | "external-lookup";
 export type ToolStatus = "ready" | "planned";
-export type ToolIcon = "fingerprint" | "key" | "link-off" | "braces" | "lock" | "scan" | "file-text" | "video" | "archive";
+export type ToolIcon = "fingerprint" | "key" | "link-off" | "braces" | "lock" | "scan" | "file-text" | "video" | "archive" | "globe";
 
 export type ToolCategory = "Network" | "Privacy" | "Security" | "Files" | "Developer";
 
@@ -71,6 +71,17 @@ export const toolRegistry: ToolDefinition[] = [
     status: "ready",
     icon: "fingerprint",
     privacyNotice: "Your request IP is read once to return this result. No application history is saved.",
+    featured: true,
+  },
+  {
+    slug: "dns-domain-inspector",
+    name: "DNS & Domain Inspector",
+    description: "Inspect a domain and query its public DNS records with explicit consent.",
+    category: "Network",
+    mode: "external-lookup",
+    status: "ready",
+    icon: "globe",
+    privacyNotice: "Domain structure is inspected locally. After confirmation, the normalized domain and record type are sent directly to Cloudflare DNS, which also receives your IP address.",
     featured: true,
   },
   {

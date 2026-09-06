@@ -97,6 +97,13 @@ export default function PrivacyPage() {
                 The speed test contacts Cloudflare directly after you start it. Cloudflare receives your IP address and measurement traffic; NoTrak disables the library’s aggregate result-logging endpoint.
               </p>
               <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                The DNS &amp; Domain Inspector first normalizes a domain or website URL locally. After you separately
+                confirm a live lookup, the browser sends only the normalized domain and selected DNS record type
+                directly to Cloudflare&rsquo;s DNS-over-HTTPS resolver. Cloudflare receives those query values and your
+                IP address. The submitted website is not opened, and URL paths, query strings, and fragments are
+                removed before the request.
+              </p>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
                 After a separate confirmation, URL reputation sends the full submitted URL through NoTrak to configured Google Safe Browsing and URLhaus services. Malware reputation sends only the locally calculated SHA-256 hash to MalwareBazaar—the selected file is never uploaded. Unconfigured providers are not contacted. Hosting and providers may retain operational records under their own policies.
               </p>
               <p className="mt-4 text-sm leading-6 text-muted-foreground">

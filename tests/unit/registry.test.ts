@@ -5,12 +5,9 @@ import { featuredTools, readyTools, toolCategories, toolRegistry } from "../../l
 
 describe("tool registry", () => {
   it("publishes every released tool", () => {
-    // 18 V1/V1.1 tools plus the four V1.2 additions: EXIF Viewer, Base64
-    // Converter, JSON Formatter, and Text Encryption, plus Password Safety,
-    // Image Resizer, and PDF Toolkit, plus the Email Header Analyzer and
-    // Sensitive Data Redactor, Image to Text, Private Resume Builder, and the
-    // Private Video Toolkit.
-    expect(readyTools).toHaveLength(33);
+    // Registry count is deliberate: adding a released tool also requires its
+    // guide, sitemap route, privacy copy, and release coverage to be reviewed.
+    expect(readyTools).toHaveLength(34);
     expect(readyTools).toHaveLength(toolRegistry.filter((tool) => tool.status === "ready").length);
   });
 

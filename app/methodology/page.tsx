@@ -46,6 +46,10 @@ const methods = [
     body: "After explicit activation, the browser sends small zero-byte latency probes followed by adaptive download and upload measurements directly to Cloudflare’s speed endpoints. Idle latency uses the Resource Timing interval from request start to response start after discarding connection warm-up and statistical outliers. The test ramps to larger synthetic payloads only while earlier requests are too short to characterize the connection, with disclosed maximum transfer sizes. Unavailable values are not presented as zero. Each run is rated complete, partial, or variable: partial means a value had too few valid samples or a measurement failed, and variable means every value arrived but the samples disagreed enough (measured as the interquartile range over the median) that the true figure is a range rather than one number. Packet-loss testing, credentials, and Cloudflare’s aggregate result-logging endpoint are disabled.",
   },
   {
+    title: "DNS and domain inspection",
+    body: "A submitted domain or HTTP(S) URL is parsed locally. NoTrak removes credentials, ports, paths, queries, and fragments; rejects local names and IP addresses; and shows the exact normalized hostname before a network request. After explicit confirmation, the browser sends that hostname and one selected record type directly to Cloudflare's DNS-over-HTTPS JSON endpoint. Returned fields are schema-checked before display. The DNSSEC label reflects only the resolver's authenticated-data flag. Recursive answers and missing records do not prove ownership, availability, safety, or the absence of other records and subdomains.",
+  },
+  {
     title: "PDF metadata cleaning",
     body: "The browser removes standard document-information fields and catalog XMP metadata, saves a new PDF, reopens it, and verifies those fields are absent. Pages and visible content are preserved, but visible names, annotations, attachments, layers, and document text are not redacted.",
   },

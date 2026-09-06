@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "base-uri 'self'",
-              "connect-src 'self' https://speed.cloudflare.com https://api.pwnedpasswords.com",
+              "connect-src 'self' https://speed.cloudflare.com https://cloudflare-dns.com https://api.pwnedpasswords.com",
               "font-src 'self'",
               // No third-party script, font, frame, or image source is needed:
               // funding is plain outbound links rather than an embedded widget.

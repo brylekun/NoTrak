@@ -42,6 +42,13 @@ export const toolGuides: Record<string, ToolGuide> = {
     limitations: "Location is approximate and may identify an ISP gateway rather than you. A VPN, proxy, mobile carrier, or corporate network can change what appears.",
     relatedSlugs: ["browser-privacy", "speed-test", "tracking-url-cleaner"],
   },
+  "dns-domain-inspector": {
+    summary: "Inspect how a domain name is structured, then optionally retrieve its current public DNS answers without visiting the website.",
+    useCases: ["Check the address, mail, name-server, verification, or certificate-authority records published for a domain.", "Remove a copied URL path locally and verify the exact hostname before making a public DNS query."],
+    howItWorks: "NoTrak normalizes the submitted domain or HTTP(S) URL locally. After explicit confirmation, the browser sends only that normalized domain and selected record type directly to Cloudflare's DNS-over-HTTPS resolver and validates the returned JSON before displaying it.",
+    limitations: "Recursive DNS answers are a current public view, not proof of ownership, availability, trust, or safety. Cached values can change after their TTL expires, missing DNSSEC authentication does not make a domain malicious, and the tool does not enumerate subdomains or query registrar records.",
+    relatedSlugs: ["whats-my-ip", "browser-privacy", "phishing-checker"],
+  },
   "password-generator": {
     summary: "Create a fresh password for an account without sending the result to a password service.",
     useCases: ["Generate a different password for every account.", "Match a website's length and character requirements."],
