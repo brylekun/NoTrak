@@ -88,12 +88,14 @@ function SelectPopup({ className, children, ...props }: SelectPrimitive.Popup.Pr
         "surface-popup max-h-[var(--available-height)] min-w-[var(--anchor-width)] origin-[var(--transform-origin)] overflow-hidden rounded-xl border border-border/80 bg-popover p-1 text-popover-foreground outline-none",
         // The popup animates in and out; `tw-animate-css` is already a project
         // dependency but these states are simple enough to express directly.
-        "transition-[transform,opacity] duration-(--motion-fast) ease-(--motion-ease-out)",
-        "data-starting-style:scale-[0.98] data-starting-style:opacity-0",
-        "data-ending-style:scale-[0.98] data-ending-style:opacity-0",
+        // Keep the measured hit area at its full size throughout the entrance.
+        // Scaling to 98% made a 44px option temporarily 43.12px in Safari.
+        "transition-opacity duration-(--motion-fast) ease-(--motion-ease-out)",
+        "data-starting-style:opacity-0",
+        "data-ending-style:opacity-0",
         // In `alignItemWithTrigger` mode the popup overlaps the trigger and
         // must not animate, or the selected row visibly drifts.
-        "data-[side=none]:data-starting-style:scale-100 data-[side=none]:data-starting-style:opacity-100 data-[side=none]:data-starting-style:transition-none",
+        "data-[side=none]:data-starting-style:opacity-100 data-[side=none]:data-starting-style:transition-none",
         "data-[side=none]:data-ending-style:transition-none",
         "motion-reduce:transition-none",
         className,
