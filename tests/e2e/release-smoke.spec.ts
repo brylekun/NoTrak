@@ -395,6 +395,10 @@ test("password safety analysis stays local until the visitor starts the breach c
 
 test("the optional password breach check sends only a padded hash prefix", async ({ page }) => {
   const requests: Array<{ url: string; padding: string | undefined; body: string | null }> = [];
+  // A controlled page's fetch can bypass page.route in WebKit. Prevent this
+  // isolated network-contract test from registering the service worker so the
+  // request is always observable and fulfilled by the route below.
+  await page.route("**/sw.js", (route) => route.abort());
   await page.route(`${PWNED_PASSWORDS_RANGE_URL}/**`, async (route) => {
     const request = route.request();
     requests.push({

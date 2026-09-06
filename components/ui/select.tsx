@@ -109,7 +109,7 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Prop
   return (
     <SelectPrimitive.Item
       className={cn(
-        "grid cursor-default grid-cols-[1rem_1fr] items-center gap-2 rounded-lg py-2 pr-3 pl-2 text-sm outline-none select-none",
+        "grid min-h-11 cursor-default grid-cols-[1rem_1fr] items-center gap-2 rounded-lg py-2 pr-3 pl-2 text-sm outline-none select-none",
         "data-highlighted:bg-accent data-highlighted:text-accent-foreground",
         "data-disabled:pointer-events-none data-disabled:opacity-50",
         className,

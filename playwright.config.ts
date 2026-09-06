@@ -40,10 +40,16 @@ export default defineConfig({
     { name: "chromium", use: { ...devices["Desktop Chrome"] }, testIgnore: MOBILE_SPEC },
     { name: "firefox", use: { ...devices["Desktop Firefox"] }, testIgnore: MOBILE_SPEC },
     { name: "webkit", use: { ...devices["Desktop Safari"] }, testIgnore: MOBILE_SPEC },
-    // One device per engine, plus a landscape pass because that orientation is
-    // where the safe-area insets actually have a non-zero value on hardware.
+    // One device per engine. The landscape pass is intentionally scoped to the
+    // safe-area test: its 852px CSS viewport activates the desktop navigation
+    // and makes portrait-only scrolling/touch assertions inapplicable.
     { name: "mobile-safari", use: { ...devices["iPhone 15"] }, testMatch: MOBILE_SPEC },
     { name: "mobile-chrome", use: { ...devices["Pixel 8"] }, testMatch: MOBILE_SPEC },
-    { name: "mobile-safari-landscape", use: { ...devices["iPhone 15 landscape"] }, testMatch: MOBILE_SPEC },
+    {
+      name: "mobile-safari-landscape",
+      use: { ...devices["iPhone 15 landscape"] },
+      testMatch: MOBILE_SPEC,
+      grep: /page gutter clears the safe-area inset/,
+    },
   ],
 });
