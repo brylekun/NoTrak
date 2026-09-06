@@ -2,7 +2,10 @@ import { expect, test } from "@playwright/test";
 
 test("DNS inspector keeps URL details local and sends only a confirmed DNS query", async ({ page }) => {
   const lookups: Array<{ method: string; url: string; accept: string | undefined; body: string | null }> = [];
-  await page.route("https://cloudflare-dns.com/dns-query**", async (route) => {
+  // Context routing with an origin/path predicate is reliable across all three
+  // Playwright engines. WebKit can bypass a page-level glob for a cross-origin
+  // request, which would make this test depend on the resolver's live answer.
+  await page.context().route((url) => url.origin === "https://cloudflare-dns.com" && url.pathname === "/dns-query", async (route) => {
     const request = route.request();
     lookups.push({
       method: request.method(),
@@ -13,6 +16,7 @@ test("DNS inspector keeps URL details local and sends only a confirmed DNS query
     await route.fulfill({
       status: 200,
       contentType: "application/dns-json",
+      headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({
         Status: 0,
         TC: false,
@@ -34,6 +38,7 @@ test("DNS inspector keeps URL details local and sends only a confirmed DNS query
 
   await page.getByLabel(/I understand that the domain/).check();
   await page.getByRole("button", { name: "Look up A records" }).click();
+  await expect.poll(() => lookups.length).toBe(1);
   await expect(page.getByRole("heading", { name: "No error" })).toBeVisible();
   await expect(page.getByText("93.184.216.34")).toBeVisible();
   await expect(page.getByText("DNSSEC validated")).toBeVisible();
