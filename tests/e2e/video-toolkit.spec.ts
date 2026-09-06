@@ -18,7 +18,10 @@ test("video toolkit creates a thumbnail and local MP4 without a processing reque
     buffer: Buffer.from(WEBM_FIXTURE, "base64"),
   });
   await expect(page.getByRole("heading", { name: "Original preview" })).toBeVisible();
-  await page.getByLabel("Quality").selectOption("small");
+  // Base UI combobox rather than a native select: open it and pick the option.
+  await page.getByRole("combobox", { name: "Quality" }).click();
+  await page.getByRole("option", { name: "Smaller file", exact: true }).click();
+  await expect(page.getByRole("combobox", { name: "Quality" })).toContainText("Smaller file");
   await page.getByRole("checkbox", { name: "Remove audio" }).check();
 
   const thumbnailDownload = page.waitForEvent("download");

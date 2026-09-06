@@ -5,6 +5,7 @@ import { Download, ImageDown, Link2, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/ui/select";
 import { formatByteSize } from "@/lib/crypto/hash";
 import {
   outputImageName,
@@ -258,22 +259,16 @@ export function ImageResizer() {
           </section>
 
           <section className="mt-7 grid gap-5 border-t border-border/70 pt-6 sm:grid-cols-2">
-            <div>
-              <label htmlFor="resize-format" className="text-sm font-semibold">Output format</label>
-              <select
-                id="resize-format"
-                className="mt-2 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                value={outputType}
-                onChange={(event) => {
-                  setOutputType(event.target.value as SupportedImageType);
-                  clearResult();
-                }}
-              >
-                {OUTPUT_FORMATS.map((format) => (
-                  <option key={format.value} value={format.value}>{format.label}</option>
-                ))}
-              </select>
-            </div>
+            <SelectField
+              id="resize-format"
+              label="Output format"
+              value={outputType}
+              options={OUTPUT_FORMATS}
+              onValueChange={(value) => {
+                setOutputType(value);
+                clearResult();
+              }}
+            />
             <div>
               <label htmlFor="resize-quality" className="text-sm font-semibold">Quality · {quality}%</label>
               <input

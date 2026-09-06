@@ -13,10 +13,10 @@ export const metadata: Metadata = {
 
 export default function ToolsPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main id="main-content" tabIndex={-1} className="flex-1">
-        <div className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
+        <div className="mx-auto w-full max-w-7xl page-gutter py-12 sm:py-16">
           <div className="motion-reveal">
             <p className="eyebrow">All tools</p>
             <h1 className="mt-3 max-w-3xl text-balance text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">

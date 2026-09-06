@@ -19,6 +19,17 @@ export type ToolDefinition = {
 
 export const toolRegistry: ToolDefinition[] = [
   {
+    slug: "audio-toolkit",
+    name: "Private Audio Toolkit",
+    description: "Trim, convert, normalize, fade, and adjust audio without uploading it.",
+    category: "Files",
+    mode: "local",
+    status: "ready",
+    icon: "video",
+    privacyNotice: "The selected audio and processed result stay in browser memory and are never uploaded.",
+    featured: true,
+  },
+  {
     slug: "video-toolkit",
     name: "Private Video Toolkit",
     description: "Trim, resize, crop, compress, mute, and capture thumbnails from your own videos without uploading them.",
@@ -237,6 +248,17 @@ export const toolRegistry: ToolDefinition[] = [
     status: "ready",
     icon: "lock",
     privacyNotice: "PDF documents and their pages are organized only in your browser.",
+  },
+  {
+    slug: "document-scanner",
+    name: "Private Document Scanner",
+    description: "Turn document photos into an ordered, cleaned, optionally searchable PDF without uploading them.",
+    category: "Files",
+    mode: "local",
+    status: "ready",
+    icon: "file-text",
+    privacyNotice: "Document photos, recognized text, and the generated PDF are processed only in your browser.",
+    featured: true,
   },
   {
     slug: "phishing-checker",

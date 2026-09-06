@@ -5,6 +5,7 @@ import { Download, Images, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { formatByteSize } from "@/lib/crypto/hash";
 import { outputImageName, type SupportedImageType } from "@/lib/images/process";
@@ -123,19 +124,18 @@ export function ImageCompressor() {
         </div>
       </div>
 
-      <div className="mt-6">
-        <label htmlFor="image-output-format" className="text-sm font-semibold">Output format</label>
-        <select
-          id="image-output-format"
-          className="mt-2 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          value={outputType}
-          onChange={(event) => { setOutputType(event.target.value as SupportedImageType); clearResult(); }}
-        >
-          <option value="image/webp">WebP — usually smallest</option>
-          <option value="image/jpeg">JPEG — broad compatibility</option>
-          <option value="image/png">PNG — lossless, quality setting ignored</option>
-        </select>
-      </div>
+      <SelectField
+        className="mt-6"
+        id="image-output-format"
+        label="Output format"
+        value={outputType}
+        options={[
+          { value: "image/webp", label: "WebP — usually smallest" },
+          { value: "image/jpeg", label: "JPEG — broad compatibility" },
+          { value: "image/png", label: "PNG — lossless, quality setting ignored" },
+        ]}
+        onValueChange={(value) => { setOutputType(value as SupportedImageType); clearResult(); }}
+      />
 
       <div className="mt-6 flex flex-wrap gap-2">
         <Button className="h-10 px-4" onClick={compress} disabled={busy}>
@@ -147,7 +147,7 @@ export function ImageCompressor() {
       {result && file && (
         <div className="result-enter mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">
           <p className="font-semibold">Compressed copy ready</p>
-          <div className="mt-3 grid grid-cols-3 gap-3 text-center text-sm">
+          <div className="mt-3 grid grid-cols-1 gap-3 text-center text-sm min-[26rem]:grid-cols-3">
             <div className="rounded-xl bg-background/70 p-3"><p className="font-semibold">{formatByteSize(file.size)}</p><p className="mt-1 text-xs text-muted-foreground">Original</p></div>
             <div className="rounded-xl bg-background/70 p-3"><p className="font-semibold">{formatByteSize(result.size)}</p><p className="mt-1 text-xs text-muted-foreground">New</p></div>
             <div className="rounded-xl bg-background/70 p-3"><p className={`font-semibold ${savedPercent >= 0 ? "text-primary" : "text-amber-700 dark:text-amber-300"}`}>{savedPercent >= 0 ? `${savedPercent}%` : `${Math.abs(savedPercent)}% larger`}</p><p className="mt-1 text-xs text-muted-foreground">Change</p></div>

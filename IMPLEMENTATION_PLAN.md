@@ -244,11 +244,25 @@ V1.9 gives the full site one restrained motion language without adding a client-
 
 Motion is limited to short opacity and transform changes and never conveys a security or privacy result by itself. There are no autoplay loops, parallax effects, shaking errors, or scroll-triggered replay. The existing global `prefers-reduced-motion` boundary now covers every new animation and transition, removes delays, and preserves full opacity and workflow usability. Release verification checks both the normal animation hook and the reduced-motion computed styles.
 
-The navigation follow-up adds a visible active-page state, keeps all primary destinations available through a compact mobile menu, closes that menu with Escape while returning focus to its trigger, and adds a keyboard-first skip link across every standard page shell. Theme-icon and menu entrances use the same short motion tokens and become effectively instant when reduced motion is requested.
+The navigation follow-up adds a visible active-page state, keeps all primary destinations available through a compact mobile menu, closes that menu with Escape while returning focus to its trigger, and adds a keyboard-first skip link across every standard page shell. The theme control names its current System, Light, or Dark mode on desktop instead of relying on an unexplained computer icon; its full action remains available to assistive technology and as hover text at every size. Theme-icon and menu entrances use the same short motion tokens and become effectively instant when reduced motion is requested.
 
 The final interaction-consistency pass introduces one shared feedback pattern for neutral progress, successful copy actions, and actionable errors, including matching icons, colors, and assistive-technology roles. Older generator and developer tools no longer present successful copies as errors. Generated result regions use the same restrained entrance, while buttons and inputs receive a 44-pixel minimum mobile target without inflating the desktop interface.
 
 Local verification: lint, strict typecheck, production build, and 315 unit tests pass; all 63 Chromium browser tests pass. Visual review covers the homepage in light mode, the full tools index in dark mode, a scrolled mobile tool page with the sticky header, and the expanded mobile navigation with its active-page treatment. Firefox and WebKit remain CI checks because their matching browser binaries are not installed on this host.
+
+### V1.10 — Private Document Scanner
+
+The 31st tool turns several local JPEG, PNG, or WebP document photos into one A4 or US Letter PDF. Visitors can reorder, rotate, remove, and independently treat pages as original color, grayscale, or higher-contrast document images. Every source is decoded and re-encoded in browser memory, removing common camera metadata before a browser worker assembles the document. Limits of twelve pages, 15 MB per image, 60 MB total, and 40 megapixels per source protect browser memory.
+
+An optional printed-English OCR pass uses the same bundled Tesseract.js engine and same-origin assets as Image to Text, then adds a transparent searchable layer to the PDF. OCR remains explicitly optional because it takes longer and can misread handwriting, blur, columns, or unusual fonts. V1.10 does not claim automatic edge detection or perspective correction; those require a separately verified document-vision model. No photo, recognized text, or generated PDF leaves the browser.
+
+### V1.11 — Private Audio Toolkit
+
+The 32nd tool locally trims and converts browser-readable MP3, M4A, AAC, WAV, OGG, and WebM audio. Visitors can export MP3, M4A, or WAV, select a lossy bitrate, adjust volume, target consistent −16 LUFS loudness, convert speech to mono, and add configurable fade-in and fade-out. Source metadata and chapters are excluded from the new output, and the original remains unchanged.
+
+The tool reuses the same lazily loaded, same-origin, single-thread FFmpeg WebAssembly engine as Private Video Toolkit, avoiding another large application dependency. The engine loads only after an explicit processing action and remains excluded from the service-worker cache. Inputs are capped at 75 MB and 30 minutes. Processing can be slower than real time on resource-constrained devices, lossy conversion cannot restore detail, and visitors must own or have permission to process the recording.
+
+Local verification: lint, strict typecheck, production build, and 322 unit tests pass; all 70 Chromium browser tests pass. A real WAV fixture is trimmed, loudness-normalized, volume-adjusted, faded, converted to mono, and encoded to MP3 without a processing request. Container inspection confirms the requested 1.25-second duration and the absence of source metadata. The focused suite also checks invalid input and phone-width layout.
 
 ## 6. API contracts
 

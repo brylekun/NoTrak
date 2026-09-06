@@ -18,14 +18,21 @@ try {
 } catch {}
 `;
 
+// `display: swap` keeps text readable during the font fetch, and the explicit
+// fallback stack lets Next generate a metric-adjusted local face so the swap
+// does not reflow the page.
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
+  fallback: ["system-ui", "-apple-system", "Segoe UI", "Helvetica Neue", "Arial", "sans-serif"],
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
+  fallback: ["ui-monospace", "SFMono-Regular", "Menlo", "Consolas", "monospace"],
 });
 
 const description =
@@ -71,6 +78,9 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: light)", color: "#fbfdfc" },
     { media: "(prefers-color-scheme: dark)", color: "#1b2a29" },
   ],
+  // Lets the page fill a notched display; the `.page-gutter` safe-area insets
+  // keep content out from under the corners and the home indicator.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -82,22 +92,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
-        {/* The vendor listens for DOMContentLoaded; a deferred parser script
-            registers it before that event, including on direct tool visits. */}
-        <script
-          defer
-          data-name="BMC-Widget"
-          data-cfasync="false"
-          src="https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js"
-          data-id="NoTrak"
-          data-description="Support me on Buy me a coffee!"
-          data-message=""
-          data-color="#40DCA5"
-          data-position="Right"
-          data-x_margin="18"
-          data-y_margin="18"
-          referrerPolicy="no-referrer"
-        />
       </head>
       <body className="min-h-full flex flex-col">
         <a href="#main-content" className="skip-link">Skip to main content</a>

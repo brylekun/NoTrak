@@ -1,7 +1,18 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import { PDFDocument } from "pdf-lib";
 import { sampleResume } from "../../lib/resume/model";
+
+/**
+ * The selects are Base UI comboboxes rather than native <select> elements, so
+ * they are driven by opening the popup and choosing an option by its visible
+ * label. Playwright's selectOption only works on a native element.
+ */
+async function chooseOption(page: Page, label: string, option: string) {
+  await page.getByRole("combobox", { name: label }).click();
+  await page.getByRole("option", { name: option, exact: true }).click();
+  await expect(page.getByRole("combobox", { name: label })).toContainText(option);
+}
 
 test("resume editor exports a PDF and roundtrips a local draft without processing requests", async ({ page }) => {
   await page.goto("/tools/resume-builder");
@@ -13,8 +24,8 @@ test("resume editor exports a PDF and roundtrips a local draft without processin
   await page.getByRole("button", { name: "Load fictional example" }).click();
   await expect(page.getByRole("img", { name: "Resume preview page 1", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Download PDF" })).toBeEnabled();
-  await page.getByLabel("Template", { exact: true }).selectOption("compact");
-  await page.getByLabel("Paper size", { exact: true }).selectOption("letter");
+  await chooseOption(page, "Template", "Compact");
+  await chooseOption(page, "Paper size", "US Letter");
   await page.getByRole("checkbox", { name: "Summary", exact: true }).uncheck();
   await page.getByRole("button", { name: "Move Projects section up" }).click();
   await expect(page.locator("svg text").filter({ hasText: /^SUMMARY$/ })).toHaveCount(0);
@@ -35,7 +46,7 @@ test("resume editor exports a PDF and roundtrips a local draft without processin
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByLabel("Open resume draft file").setInputFiles(draftPath);
   await expect(page.getByLabel("Full name (required for PDF)")).toHaveValue("Alex Rivera");
-  await expect(page.getByLabel("Template", { exact: true })).toHaveValue("compact");
+  await expect(page.getByRole("combobox", { name: "Template" })).toContainText("Compact");
   await expect(page.getByRole("checkbox", { name: "Summary", exact: true })).not.toBeChecked();
   expect(requests).toEqual([]);
   const storage = await page.evaluate(() => JSON.stringify({ local: { ...localStorage }, session: { ...sessionStorage } }));
@@ -77,8 +88,8 @@ test("both resume templates export previewed pages and keep working offline", as
   await expect(page.getByRole("button", { name: "Download PDF" })).toBeEnabled();
   await page.getByRole("heading", { name: "Contact details", exact: true }).scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath("desktop-editor.png") });
-  for (const template of ["classic", "compact"] as const) {
-    await page.getByLabel("Template", { exact: true }).selectOption(template);
+  for (const [template, label] of [["classic", "Classic"], ["compact", "Compact"]] as const) {
+    await chooseOption(page, "Template", label);
     await expect(page.getByRole("button", { name: "Download PDF" })).toBeEnabled();
     const download = page.waitForEvent("download");
     await page.getByRole("button", { name: "Download PDF" }).click();

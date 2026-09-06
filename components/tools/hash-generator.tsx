@@ -6,6 +6,7 @@ import { Check, Copy, FileKey2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FeedbackMessage } from "@/components/ui/feedback-message";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { formatByteSize, HASH_ALGORITHMS, hashText, type HashAlgorithm } from "@/lib/crypto/hash";
 import { COPY_FALLBACK_MESSAGE, copyToClipboard } from "@/lib/clipboard";
@@ -125,17 +126,14 @@ export function HashGenerator() {
         )}
       </div>
 
-      <div className="mt-5">
-        <label htmlFor="hash-algorithm" className="text-sm font-semibold">Algorithm</label>
-        <select
-          id="hash-algorithm"
-          className="mt-2 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          value={algorithm}
-          onChange={(event) => { setAlgorithm(event.target.value as HashAlgorithm); resetResult(); }}
-        >
-          {HASH_ALGORITHMS.map((value) => <option key={value}>{value}</option>)}
-        </select>
-      </div>
+      <SelectField
+        className="mt-5"
+        id="hash-algorithm"
+        label="Algorithm"
+        value={algorithm}
+        options={HASH_ALGORITHMS.map((value) => ({ value, label: value }))}
+        onValueChange={(value) => { setAlgorithm(value); resetResult(); }}
+      />
 
       <div className="mt-5 flex flex-wrap gap-2">
         <Button className="h-10 px-4" onClick={calculate} disabled={busy}>

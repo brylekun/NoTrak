@@ -3,6 +3,10 @@ import { defineConfig, devices } from "@playwright/test";
 const port = 3100;
 const baseURL = `http://127.0.0.1:${port}`;
 
+// Only this spec runs under the emulated phones; everything else assumes a
+// desktop viewport and sets its own size where it needs one.
+const MOBILE_SPEC = "**/mobile-layout.spec.ts";
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -30,8 +34,16 @@ export default defineConfig({
     timeout: 120_000,
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", use: { ...devices["Desktop Safari"] } },
+    // The desktop projects own the full suite. Several of its tests call
+    // setViewportSize themselves, which would defeat a device descriptor, so
+    // the mobile spec is kept out of them and run only under real devices.
+    { name: "chromium", use: { ...devices["Desktop Chrome"] }, testIgnore: MOBILE_SPEC },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] }, testIgnore: MOBILE_SPEC },
+    { name: "webkit", use: { ...devices["Desktop Safari"] }, testIgnore: MOBILE_SPEC },
+    // One device per engine, plus a landscape pass because that orientation is
+    // where the safe-area insets actually have a non-zero value on hardware.
+    { name: "mobile-safari", use: { ...devices["iPhone 15"] }, testMatch: MOBILE_SPEC },
+    { name: "mobile-chrome", use: { ...devices["Pixel 8"] }, testMatch: MOBILE_SPEC },
+    { name: "mobile-safari-landscape", use: { ...devices["iPhone 15 landscape"] }, testMatch: MOBILE_SPEC },
   ],
 });

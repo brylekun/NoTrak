@@ -29,10 +29,10 @@ const principles = [
 
 export default function PrivacyPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main id="main-content" tabIndex={-1} className="flex-1">
-        <div className="mx-auto w-full max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
+        <div className="mx-auto w-full max-w-5xl page-gutter py-12 sm:py-16">
           <p className="eyebrow">Privacy</p>
           <h1 className="mt-3 max-w-3xl text-balance text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">
             You should know exactly where your data goes.
@@ -78,9 +78,14 @@ export default function PrivacyPage() {
                 reputation lookups are explicitly excluded from caching. Clearing site data removes all of it.
               </p>
               <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                Image to Text downloads NoTrak&rsquo;s bundled English OCR model and browser engine on first use. The
-                service worker may cache those application files for offline use, but it never caches your selected
-                image or the text recognized from it.
+                Image to Text and the Private Document Scanner download NoTrak&rsquo;s bundled English OCR model and
+                browser engine on first use when recognition is requested. The service worker may cache those
+                application files for offline use, but it never caches your selected images, recognized text, or PDFs.
+              </p>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                Private Audio Toolkit and Private Video Toolkit load NoTrak&rsquo;s same-origin FFmpeg browser engine only
+                after you start processing. The engine is not stored by NoTrak&rsquo;s offline cache, and selected media or
+                generated results are never placed there.
               </p>
             </section>
             <section>
@@ -102,11 +107,11 @@ export default function PrivacyPage() {
                 a padded response, compares the remaining hash characters locally, and does not store the result.
               </p>
               <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                The floating Buy Me a Coffee widget loads its script, icon, and font from Buy Me a Coffee when
-                you open a page. That provider receives your IP address and technical request information.
-                Opening the widget loads its donation page, which is governed by the provider&rsquo;s own privacy
-                and cookie policies. NoTrak does not pass tool inputs to the widget. The other funding options
-                remain plain outbound links, and the Monero option involves no payment processor.
+                Funding involves no embedded widget and no third-party script. Every option on the support page is a
+                plain outbound link, so no donation provider learns you visited NoTrak until you choose to open one.
+                A provider you open then receives your IP address under its own privacy and cookie policies, and
+                NoTrak passes it nothing about your session or tool inputs. The Monero option involves no payment
+                processor at all.
               </p>
             </section>
           </div>

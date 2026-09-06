@@ -9,16 +9,16 @@ import { hasMoneroAddress, moneroAddress, supportLinks } from "@/lib/support";
 
 export const metadata: Metadata = {
   title: "Support NoTrak",
-  description: "Ways to fund NoTrak's development through donation links and Buy Me a Coffee.",
+  description: "Ways to fund NoTrak's development through plain outbound donation links.",
   alternates: { canonical: "/support" },
 };
 
 export default function SupportPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main id="main-content" tabIndex={-1} className="flex-1">
-        <div className="mx-auto w-full max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
+        <div className="mx-auto w-full max-w-3xl page-gutter py-12 sm:py-16">
           <p className="eyebrow">Support</p>
           <h1 className="mt-3 text-balance text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">
             Keep NoTrak free and unfunded by tracking.
@@ -30,9 +30,9 @@ export default function SupportPage() {
           </p>
 
           <div className="callout-info mt-8">
-            <strong>About the donation widget.</strong> Buy Me a Coffee supplies the floating button and receives
-            your IP address when its assets load. Its donation page loads when you open the widget. The options
-            below are plain outbound links. See our privacy page for details.
+            <strong>No donation widget.</strong> This page embeds nothing and loads no third-party script, so no
+            payment provider learns you were here. Each option below is a plain link that opens in a new tab; only
+            then does that provider see your request. See our privacy page for details.
           </div>
 
           <div className="mt-10 space-y-4">

@@ -9,7 +9,10 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
       <body
         style={{
           margin: 0,
-          minHeight: "100vh",
+          // Dynamic viewport height, so the panel is not pushed past the fold
+          // by a mobile URL bar. A style object cannot hold a `100vh` fallback
+          // under the same key, and this boundary only needs to center text.
+          minHeight: "100dvh",
           display: "grid",
           placeItems: "center",
           padding: "2rem",

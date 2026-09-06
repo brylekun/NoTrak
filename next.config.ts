@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const scriptSources = ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", "https://cdnjs.buymeacoffee.com/1.0.0/widget.prod.min.js"];
+const scriptSources = ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'"];
 
 // React's development runtime uses eval for debugging support. Keep the
 // exception local to development so the production CSP remains strict.
@@ -27,11 +27,13 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               "base-uri 'self'",
               "connect-src 'self' https://speed.cloudflare.com https://api.pwnedpasswords.com",
-              "font-src 'self' https://cdn.buymeacoffee.com",
-              "frame-src https://www.buymeacoffee.com https://buymeacoffee.com",
+              "font-src 'self'",
+              // No third-party script, font, frame, or image source is needed:
+              // funding is plain outbound links rather than an embedded widget.
+              "frame-src 'none'",
               "form-action 'self'",
               "frame-ancestors 'none'",
-              "img-src 'self' data: blob: https://cdn.buymeacoffee.com",
+              "img-src 'self' data: blob:",
               "media-src 'self' blob:",
               "object-src 'none'",
               `script-src ${scriptSources.join(" ")}`,

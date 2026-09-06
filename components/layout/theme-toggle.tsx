@@ -85,6 +85,12 @@ const icons: Record<ThemePreference, typeof Monitor> = {
   dark: Moon,
 };
 
+const preferenceLabels: Record<ThemePreference, string> = {
+  system: "System",
+  light: "Light",
+  dark: "Dark",
+};
+
 export function ThemeToggle() {
   const preference = useSyncExternalStore(subscribe, readPreference, getServerSnapshot);
 
@@ -97,8 +103,16 @@ export function ThemeToggle() {
   const Icon = icons[preference];
 
   return (
-    <Button type="button" variant="ghost" size="icon" onClick={cycleTheme} title={themeToggleLabel(preference)}>
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className="h-9 px-2 md:px-3"
+      onClick={cycleTheme}
+      title={themeToggleLabel(preference)}
+    >
       <Icon key={preference} className="theme-icon size-4" aria-hidden="true" />
+      <span className="hidden md:inline" aria-hidden="true">{preferenceLabels[preference]}</span>
       <span className="sr-only">{themeToggleLabel(preference)}</span>
     </Button>
   );

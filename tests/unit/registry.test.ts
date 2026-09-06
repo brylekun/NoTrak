@@ -10,7 +10,7 @@ describe("tool registry", () => {
     // Image Resizer, and PDF Toolkit, plus the Email Header Analyzer and
     // Sensitive Data Redactor, Image to Text, Private Resume Builder, and the
     // Private Video Toolkit.
-    expect(readyTools).toHaveLength(30);
+    expect(readyTools).toHaveLength(32);
     expect(readyTools).toHaveLength(toolRegistry.filter((tool) => tool.status === "ready").length);
   });
 

@@ -18,10 +18,10 @@ export default function OfflinePage() {
   const localTools = readyTools.filter((tool) => tool.mode === "local");
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main id="main-content" tabIndex={-1} className="flex-1">
-        <div className="mx-auto w-full max-w-3xl px-5 py-16 sm:px-8 sm:py-24">
+        <div className="mx-auto w-full max-w-3xl page-gutter py-16 sm:py-24">
           <span className="grid size-12 place-items-center rounded-2xl bg-muted text-muted-foreground">
             <CloudOff className="size-6" aria-hidden="true" />
           </span>

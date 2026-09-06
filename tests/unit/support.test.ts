@@ -22,8 +22,8 @@ describe("support links", () => {
   });
 
   /*
-   * Outbound support destinations remain plain links. The separately embedded
-   * Buy Me a Coffee widget has its own disclosed asset requests.
+   * Support destinations are plain links. NoTrak embeds no donation widget, so
+   * no funding asset should ever be fetched from a third party.
    */
   it("points at no third-party image or script asset", () => {
     for (const link of supportLinks) {

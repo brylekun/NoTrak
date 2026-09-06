@@ -2,9 +2,10 @@
  * Funding destinations, kept in one place so the footer, the support page, and
  * the README describe the same targets.
  *
- * These destinations are outbound links. The separate Buy Me a Coffee widget
- * in the root layout loads vendor assets on page load; that exception is
- * disclosed on /privacy and /support and allowed explicitly in the CSP.
+ * Every destination is a plain outbound link. NoTrak embeds no donation widget
+ * and loads no provider script, so nothing here contacts a third party until
+ * the visitor clicks. Keep it that way: an embed would make the CSP's
+ * third-party script, font, frame, and image sources necessary again.
  */
 
 export type SupportLink = {

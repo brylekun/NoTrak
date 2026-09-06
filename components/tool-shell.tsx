@@ -14,11 +14,11 @@ export function ToolShell({ tool, children, wide = false }: { tool: ToolDefiniti
   const relatedTools = guide.relatedSlugs.map((slug) => getTool(slug)).filter((entry) => entry !== undefined);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <JsonLd data={toolBreadcrumbStructuredData(tool)} />
       <SiteHeader />
       <main id="main-content" tabIndex={-1} className="flex-1">
-        <div className={`mx-auto w-full ${wide ? "max-w-7xl" : "max-w-5xl"} px-5 py-8 sm:px-8 sm:py-12`}>
+        <div className={`mx-auto w-full ${wide ? "max-w-7xl" : "max-w-5xl"} page-gutter py-8 sm:py-12`}>
           <Link href="/tools" className="motion-reveal inline-flex items-center gap-2 rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none">
             <ArrowLeft className="size-4" aria-hidden="true" />
             All tools
@@ -32,7 +32,7 @@ export function ToolShell({ tool, children, wide = false }: { tool: ToolDefiniti
               <h1 className="mt-4 text-balance text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">{tool.name}</h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">{tool.description}</p>
 
-              <div className="mt-8 rounded-3xl border border-border/80 bg-card p-5 shadow-[0_22px_70px_-52px_color-mix(in_oklch,var(--foreground),transparent_35%)] transition-shadow duration-300 hover:shadow-[0_28px_80px_-55px_color-mix(in_oklch,var(--primary),transparent_50%)] motion-reduce:transition-none sm:p-7">
+              <div className="surface-panel mt-8 rounded-3xl border border-border/80 bg-card p-5 sm:p-7">
                 {children}
               </div>
             </div>
@@ -81,12 +81,12 @@ export function ToolShell({ tool, children, wide = false }: { tool: ToolDefiniti
 
             <div className="mt-8">
               <h3 className="font-semibold">Related privacy tools</h3>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="scroll-strip mt-3">
                 {relatedTools.map((related) => (
                   <Link
                     key={related.slug}
                     href={`/tools/${related.slug}`}
-                    className="group inline-flex items-center gap-2 rounded-full border border-border/80 bg-card px-3 py-2 text-sm font-medium transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="group inline-flex items-center gap-2 rounded-full border border-border/80 bg-card px-3 py-2 text-sm font-medium transition-colors hover:border-primary/40 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                   >
                     {related.name}
                     <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" aria-hidden="true" />

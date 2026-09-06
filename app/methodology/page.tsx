@@ -58,8 +58,16 @@ const methods = [
     body: "The browser copies selected pages into new PDF documents in the order and rotation shown. Combining, extracting, and splitting never change the selected originals or send them over the network. Page copying is not a lossless editor: digital signatures become invalid, and interactive forms, bookmarks, attachments, scripts, or other document-level features may not survive. Password-protected PDFs must be unlocked first.",
   },
   {
+    title: "Private document scanning",
+    body: "Selected JPEG, PNG, or WebP photos are decoded, rotated, color-treated, and re-encoded through the browser Canvas API before a local worker fits them onto A4 or Letter pages. This removes common source-image metadata but does not hide information visible in the pixels. Optional printed-English recognition uses the same bundled Tesseract.js engine as Image to Text and adds a transparent search layer; it can misread text and does not reproduce the visual layout. No photo, recognized text, or generated PDF is uploaded.",
+  },
+  {
     title: "Local video processing",
     body: "The selected MP4 or WebM is held in browser memory and processed by a same-origin, single-thread WebAssembly build of FFmpeg. The source is never uploaded or fetched from a social platform. Trimming re-encodes a new H.264/AAC MP4, removes source metadata and chapters, and optionally center-crops, resizes, mutes, or adjusts volume. Thumbnail capture uses the browser canvas. File, duration, and pixel limits reduce memory failures, but encoding can still be slow or fail on resource-constrained devices, and estimated output sizes are not guarantees.",
+  },
+  {
+    title: "Local audio processing",
+    body: "The selected audio file is held in browser memory and processed by the same same-origin WebAssembly FFmpeg engine used for video. Trimming, MP3/M4A/WAV conversion, volume adjustment, loudness normalization, mono conversion, and fades create a new file without uploading the source. Metadata, chapters, video streams, subtitles, and data streams are excluded. Local encoding can be slow, lossy conversion can reduce quality, and normalization can change dynamics.",
   },
   {
     title: "Image processing",
@@ -81,10 +89,10 @@ const methods = [
 
 export default function MethodologyPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-dvh flex-col">
       <SiteHeader />
       <main id="main-content" tabIndex={-1} className="flex-1">
-        <div className="mx-auto w-full max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
+        <div className="mx-auto w-full max-w-5xl page-gutter py-12 sm:py-16">
           <p className="eyebrow">Methodology</p>
           <h1 className="mt-3 max-w-3xl text-balance text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">Clear methods. Honest limits.</h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">NoTrak explains what each result means, what leaves your device, and what the tool cannot guarantee.</p>

@@ -6,11 +6,15 @@
 
 Private browser tools with no accounts, file uploads, or saved history.
 
-NoTrak currently includes 30 tools for connection and reputation checks, password safety, sensitive-data redaction, local image-to-text OCR, private resume building and video preparation, email header analysis, secure generation, hashing, image, QR, and PDF processing, file and text encryption, browser privacy education, metadata inspection and removal, and developer utilities. Browse them all at `/tools`, which filters by category and searches by name.
+NoTrak currently includes 32 tools for connection and reputation checks, password safety, sensitive-data redaction, local image-to-text OCR, private document scanning, resume building, audio and video preparation, email header analysis, secure generation, hashing, image, QR, and PDF processing, file and text encryption, browser privacy education, metadata inspection and removal, and developer utilities. Browse them all at `/tools`, which filters by category and searches by name.
 
 The Private Resume Builder offers Classic and Compact single-column layouts, A4/Letter pages, a paginated live preview, selectable-text PDF export, and local JSON draft downloads/imports. Content is never autosaved or uploaded. Bundled OFL-licensed Noto Sans fonts support Latin, Greek, and Cyrillic; unsupported characters are rejected rather than silently dropped. Resumes are limited to eight pages, twelve entries per section, and 40,000 serialized draft characters. Draft files are unencrypted.
 
 The Private Video Toolkit accepts a browser-readable MP4 or WebM owned by the visitor and creates a new MP4 locally. It supports trimming, 720p/1080p output, original/16:9/1:1/4:5/9:16 framing, three quality levels, audio removal or volume adjustment, and JPEG thumbnail capture. Inputs are limited to 75 MB, 3 minutes, and 4K because WebAssembly video encoding is memory- and CPU-intensive. The roughly 31 MB single-thread engine is loaded from NoTrak's own origin only when processing starts and is excluded from the service worker's offline cache.
+
+The Private Audio Toolkit accepts browser-readable MP3, M4A, AAC, WAV, OGG, and WebM audio owned by the visitor. It trims and exports MP3, M4A, or WAV; adjusts volume; normalizes loudness; converts to mono; adds fades; and removes source metadata locally. Inputs are limited to 75 MB and 30 minutes. It reuses the same lazily loaded, same-origin FFmpeg engine as the video toolkit.
+
+The Private Document Scanner combines up to twelve JPEG, PNG, or WebP photos into an A4 or US Letter PDF. Pages can be reordered, rotated, and converted to grayscale or higher-contrast document treatment. Optional printed-English OCR uses the bundled local recognition engine to add searchable text. Source images are re-encoded to remove common camera metadata; nothing is uploaded.
 
 The local tools keep working offline: NoTrak installs a service worker that caches only its own pages and assets. Running a tool with the network off demonstrates that its core processing does not depend on a server; the source code and network tests enforce the stronger no-input-transmission guarantee.
 
@@ -58,7 +62,7 @@ NoTrak carries no advertising, analytics, or affiliate links, so it earns nothin
 - [PayPal](https://www.paypal.com/donate/?business=brylekun%40gmail.com&item_name=NoTrak%20development&currency_code=USD) — one-time
 - Monero — the address, a copy button, and a locally generated QR code are on the in-app `/support` page
 
-The site footer uses plain text donation links. A floating Buy Me a Coffee widget for `NoTrak` also appears at the bottom right. It loads the provider's script, icon, and font on page load, exposing the visitor's IP address to that provider; its donation iframe loads when opened. This exception is disclosed on `/privacy` and `/support`. The CSP permits only the widget's script URL, asset host, and frame host in the relevant directives.
+Funding is plain outbound links only. NoTrak embeds no donation widget and loads no provider script, so a page load contacts no payment provider and the CSP needs no third-party script, font, frame, or image source. Do not reintroduce an embed without reopening those directives and updating the `/privacy` and `/support` disclosures.
 
 Funding targets live in [`lib/support.ts`](./lib/support.ts). The Monero address is intentionally empty there until a verified address is pasted in; while it is empty, the app renders no Monero section rather than a placeholder that could be mistaken for a real address.
 

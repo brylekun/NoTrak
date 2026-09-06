@@ -4,12 +4,12 @@ import { useEffect, useId, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Download, FileUp, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { blankEntry, blankResume, MAX_DRAFT_BYTES, MAX_ENTRIES, moveItem, parseResumeDraft, sampleResume, sectionNames, type EntrySection, type ResumeDraft, type ResumeEntry } from "@/lib/resume/model";
 import type { ResumeLayout } from "@/lib/resume/pdf";
 import "./resume-builder.css";
 
-const selectClass = "h-10 w-full rounded-lg border border-input bg-background px-3 text-sm";
 
 function Field({ label, value, onChange, multiline = false, maxLength = 200, placeholder }: { label: string; value: string; onChange: (value: string) => void; multiline?: boolean; maxLength?: number; placeholder?: string }) {
   const id = useId();
@@ -133,8 +133,20 @@ export function ResumeBuilder() {
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
         <div className="min-w-0 space-y-6">
           <div className="grid grid-cols-2 gap-4">
-            <label className="space-y-2 text-sm font-medium"><span>Template</span><select aria-label="Template" className={selectClass} value={draft.template} onChange={(e) => update({ ...draft, template: e.target.value as ResumeDraft["template"] })}><option value="classic">Classic</option><option value="compact">Compact</option></select></label>
-            <label className="space-y-2 text-sm font-medium"><span>Paper size</span><select aria-label="Paper size" className={selectClass} value={draft.paper} onChange={(e) => update({ ...draft, paper: e.target.value as ResumeDraft["paper"] })}><option value="a4">A4</option><option value="letter">US Letter</option></select></label>
+            <SelectField
+              label="Template"
+              labelClassName="font-medium"
+              value={draft.template}
+              options={[{ value: "classic", label: "Classic" }, { value: "compact", label: "Compact" }]}
+              onValueChange={(template) => update({ ...draft, template: template as ResumeDraft["template"] })}
+            />
+            <SelectField
+              label="Paper size"
+              labelClassName="font-medium"
+              value={draft.paper}
+              options={[{ value: "a4", label: "A4" }, { value: "letter", label: "US Letter" }]}
+              onValueChange={(paper) => update({ ...draft, paper: paper as ResumeDraft["paper"] })}
+            />
           </div>
           <section className="space-y-4" aria-labelledby="resume-contact-heading">
             <h2 id="resume-contact-heading" className="text-xl font-semibold">Contact details</h2>

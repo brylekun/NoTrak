@@ -10,20 +10,20 @@ import { featuredTools, readyTools } from "@/lib/tools/registry";
 
 export default function Home() {
   return (
-    <div className="min-h-screen overflow-hidden">
+    <div className="min-h-dvh overflow-hidden">
       <JsonLd data={websiteStructuredData()} />
       <SiteHeader />
 
       <main id="main-content" tabIndex={-1}>
         <section className="relative border-b border-border/70">
           <div className="ambient-grid" aria-hidden="true" />
-          <div className="relative mx-auto grid w-full max-w-7xl gap-10 px-5 py-14 sm:px-8 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:py-24">
+          <div className="relative mx-auto grid w-full max-w-7xl gap-10 page-gutter py-14 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-end lg:py-24">
             <div className="motion-reveal">
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-3 py-1.5 text-xs font-semibold text-primary">
                 <span className="size-1.5 rounded-full bg-primary shadow-[0_0_0_4px_color-mix(in_oklch,var(--primary),transparent_82%)]" />
                 Privacy-first by design
               </div>
-              <h1 className="max-w-3xl text-balance text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
+              <h1 className="max-w-3xl text-balance text-4xl font-semibold leading-[1.02] tracking-[-0.045em] min-[26rem]:text-5xl min-[26rem]:leading-[0.98] min-[26rem]:tracking-[-0.055em] sm:text-6xl lg:text-7xl">
                 Useful tools.
                 <span className="block text-primary">No trail.</span>
               </h1>
@@ -42,15 +42,21 @@ export default function Home() {
                   <p className="text-xs text-muted-foreground">Clear boundaries on every tool.</p>
                 </div>
               </div>
-              <div className="mt-6 grid grid-cols-3 gap-3 text-center">
+              {/* Three columns need about 26rem before the labels start
+                  breaking mid-word, which is narrower than the `sm` breakpoint.
+                  Below that the promises stack as a short list. */}
+              <div className="mt-6 grid grid-cols-1 gap-2 min-[26rem]:grid-cols-3 min-[26rem]:gap-3 min-[26rem]:text-center">
                 {[
                   ["No", "accounts"],
                   ["No", "file uploads"],
                   ["No", "saved history"],
                 ].map(([value, label]) => (
-                  <div key={label} className="rounded-xl border border-border/70 bg-background/65 px-2 py-3">
+                  <div
+                    key={label}
+                    className="flex items-baseline gap-1.5 rounded-xl border border-border/70 bg-background/65 px-3 py-2.5 min-[26rem]:block min-[26rem]:px-2 min-[26rem]:py-3"
+                  >
                     <p className="text-sm font-semibold text-primary">{value}</p>
-                    <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">{label}</p>
+                    <p className="text-[11px] leading-4 text-muted-foreground min-[26rem]:mt-0.5">{label}</p>
                   </div>
                 ))}
               </div>
@@ -58,7 +64,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="tools" className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
+        <section id="tools" className="mx-auto w-full max-w-7xl page-gutter py-12 sm:py-16">
           <div className="motion-reveal mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="eyebrow">Start here</p>

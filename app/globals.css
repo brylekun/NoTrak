@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-geist-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -73,6 +73,28 @@
   --chart-4: oklch(0.56 0.12 290);
   --chart-5: oklch(0.64 0.15 34);
   --radius: 0.875rem;
+  /* Elevation is layered rather than a single blur: a tight contact shadow
+     grounds the element, a mid layer gives it thickness, and a wide ambient
+     layer places it in the room. Each level keeps that structure so surfaces
+     read as the same material at different heights. */
+  --shadow-e1:
+    0 1px 2px -1px oklch(0.19 0.025 236 / 10%),
+    0 3px 8px -4px oklch(0.19 0.025 236 / 8%);
+  --shadow-e2:
+    0 1px 2px -1px oklch(0.19 0.025 236 / 10%),
+    0 6px 16px -8px oklch(0.19 0.025 236 / 12%),
+    0 18px 45px -30px oklch(0.19 0.025 236 / 14%);
+  --shadow-e3:
+    0 1px 3px -1px oklch(0.19 0.025 236 / 12%),
+    0 10px 26px -12px oklch(0.19 0.025 236 / 14%),
+    0 28px 70px -40px oklch(0.19 0.025 236 / 18%);
+  --shadow-primary:
+    0 1px 2px -1px oklch(0.48 0.12 174 / 18%),
+    0 8px 20px -10px oklch(0.48 0.12 174 / 22%),
+    0 24px 60px -35px oklch(0.48 0.12 174 / 26%);
+  /* A hairline along the top edge reads as light catching the surface. It is
+     near-invisible in light mode and does the heavy lifting in dark mode. */
+  --surface-highlight: inset 0 1px 0 oklch(1 0 0 / 55%);
   --motion-fast: 140ms;
   --motion-medium: 220ms;
   --motion-slow: 320ms;
@@ -107,6 +129,24 @@
   --border: oklch(0.36 0.018 205);
   --input: oklch(0.39 0.018 205);
   --ring: oklch(0.66 0.085 166);
+  /* Dark surfaces need a deeper, more opaque shadow to separate from the
+     background, and a much fainter top highlight so edges do not glow. */
+  --shadow-e1:
+    0 1px 2px -1px oklch(0.06 0.012 215 / 55%),
+    0 3px 8px -4px oklch(0.06 0.012 215 / 45%);
+  --shadow-e2:
+    0 1px 2px -1px oklch(0.06 0.012 215 / 60%),
+    0 6px 16px -8px oklch(0.06 0.012 215 / 55%),
+    0 18px 45px -30px oklch(0.06 0.012 215 / 70%);
+  --shadow-e3:
+    0 1px 3px -1px oklch(0.06 0.012 215 / 65%),
+    0 10px 26px -12px oklch(0.06 0.012 215 / 60%),
+    0 28px 70px -40px oklch(0.06 0.012 215 / 80%);
+  --shadow-primary:
+    0 1px 2px -1px oklch(0.06 0.012 215 / 60%),
+    0 8px 20px -10px oklch(0.68 0.09 166 / 20%),
+    0 24px 60px -35px oklch(0.68 0.09 166 / 26%);
+  --surface-highlight: inset 0 1px 0 oklch(1 0 0 / 7%);
   --chart-1: oklch(0.68 0.09 166);
   --chart-2: oklch(0.68 0.08 225);
   --chart-3: oklch(0.74 0.09 94);
@@ -142,7 +182,7 @@
 
 @layer components {
   .nav-link {
-    @apply rounded-lg px-3 py-2 font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply rounded-lg px-3 py-2 font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
     transition: color var(--motion-fast) ease, background-color var(--motion-fast) ease, transform var(--motion-fast) var(--motion-ease-standard);
   }
 
@@ -192,33 +232,109 @@
     mask-image: linear-gradient(to bottom right, black, transparent 70%);
   }
 
-  .privacy-panel {
-    @apply rounded-3xl border border-border/80 bg-card/80 p-5 shadow-[0_24px_70px_-45px_color-mix(in_oklch,var(--foreground),transparent_55%)] backdrop-blur sm:p-6;
+  .site-header {
+    box-shadow: var(--shadow-e1);
   }
 
-  .dark .privacy-panel {
-    box-shadow: 0 24px 70px -45px oklch(0.06 0.012 215 / 80%);
+  /* Floating layers (select popups, menus) sit above the page rather than in
+     it, so they take the highest elevation plus the top highlight. */
+  .surface-popup {
+    box-shadow: var(--shadow-e3), var(--surface-highlight);
+  }
+
+  /* The main working surface on a tool page. It lifts slightly on hover so the
+     panel feels like an object without competing with the cards on the grid. */
+  .surface-panel {
+    box-shadow: var(--shadow-e2), var(--surface-highlight);
+    transition: box-shadow var(--motion-slow) var(--motion-ease-out);
+  }
+
+  .surface-panel:hover {
+    box-shadow: var(--shadow-e3), var(--surface-highlight);
+  }
+
+  .privacy-panel {
+    @apply rounded-3xl border border-border/80 bg-card/80 p-5 backdrop-blur sm:p-6;
+    box-shadow: var(--shadow-e3), var(--surface-highlight);
+  }
+
+  /* Single source for the page gutter. With `viewport-fit=cover` the inset
+     keeps content clear of rounded corners and the notch in landscape, while
+     the first `max()` argument carries the normal spacing everywhere else. */
+  .page-gutter {
+    padding-inline-start: max(1.25rem, env(safe-area-inset-left, 0px));
+    padding-inline-end: max(1.25rem, env(safe-area-inset-right, 0px));
+  }
+
+  @media (min-width: 640px) {
+    .page-gutter {
+      padding-inline-start: max(2rem, env(safe-area-inset-left, 0px));
+      padding-inline-end: max(2rem, env(safe-area-inset-right, 0px));
+    }
+  }
+
+  /* Filter and pill rows become a single swipeable strip on narrow screens
+     instead of wrapping into three ragged lines. The negative margin cancels
+     the page gutter so the strip runs edge to edge, and the matching padding
+     keeps the first and last pill clear of the screen edge. */
+  .scroll-strip {
+    @apply flex snap-x snap-proximity gap-2 overflow-x-auto pb-1;
+    --strip-gutter: max(1.25rem, env(safe-area-inset-left, 0px));
+    margin-inline: calc(-1 * var(--strip-gutter));
+    padding-inline: var(--strip-gutter);
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .scroll-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scroll-strip > * {
+    @apply shrink-0 snap-start whitespace-nowrap;
+    scroll-margin-inline: var(--strip-gutter);
+  }
+
+  /* Past the mobile breakpoint there is room to wrap, which avoids hiding
+     filters behind a scroll gesture that is harder to discover with a mouse. */
+  @media (min-width: 640px) {
+    .scroll-strip {
+      @apply flex-wrap overflow-visible pb-0;
+      margin-inline: 0;
+      padding-inline: 0;
+    }
+
+    .scroll-strip > * {
+      @apply whitespace-normal;
+    }
   }
 
   .eyebrow {
     @apply text-xs font-semibold uppercase tracking-[0.16em] text-primary;
   }
 
+  /* The resting shadow lives on the element; the hover shadow lives on a
+     pseudo-element that only fades in. box-shadow cannot be composited, so
+     transitioning it directly repaints on the main thread for every card in the
+     grid. Cross-fading two opacities keeps the work on the compositor. */
   .tool-card {
-    @apply flex min-h-72 flex-col rounded-3xl border border-border/80 bg-card p-6 shadow-[0_18px_55px_-45px_color-mix(in_oklch,var(--foreground),transparent_45%)] hover:-translate-y-1 hover:border-primary/35 hover:shadow-[0_24px_65px_-42px_color-mix(in_oklch,var(--primary),transparent_55%)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
-    transition: transform var(--motion-medium) var(--motion-ease-out), border-color var(--motion-medium) ease, box-shadow var(--motion-medium) var(--motion-ease-out);
+    @apply relative flex min-h-72 flex-col rounded-3xl border border-border/80 bg-card p-6 hover:-translate-y-1 hover:border-primary/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+    box-shadow: var(--shadow-e2), var(--surface-highlight);
+    transition: transform var(--motion-medium) var(--motion-ease-out), border-color var(--motion-medium) ease;
+  }
+
+  .tool-card::after {
+    @apply pointer-events-none absolute inset-0 rounded-3xl opacity-0 content-[''];
+    box-shadow: var(--shadow-primary);
+    transition: opacity var(--motion-medium) var(--motion-ease-out);
+  }
+
+  .tool-card:hover::after {
+    @apply opacity-100;
   }
 
   .tool-card:active {
     transform: translateY(-1px) scale(0.995);
-  }
-
-  .dark .tool-card {
-    box-shadow: 0 18px 55px -42px oklch(0.06 0.012 215 / 88%);
-  }
-
-  .dark .tool-card:hover {
-    box-shadow: 0 24px 65px -42px color-mix(in oklch, var(--primary) 32%, transparent);
   }
 
   .tool-icon {
@@ -340,14 +456,64 @@
   }
 }
 
+/* iOS paints a grey box over any tapped link or button. The `:active` states
+   defined above are the intended feedback, so suppress the platform one. */
+@layer base {
+  a,
+  button,
+  select,
+  summary,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 24%, transparent);
+    color: var(--foreground);
+  }
+
+  html {
+    scrollbar-color: color-mix(in oklch, var(--border) 90%, transparent) transparent;
+  }
+}
+
+/* Touch targets. The 44px floor covers every interactive control, not just the
+   Button and Input primitives: pills, footer links and native selects are all
+   tappable and were previously around 32px. Inline links inside prose keep
+   their natural height, since padding them out would break the text flow. */
 @media (max-width: 639px) {
-  [data-slot="button"] {
+  [data-slot="button"],
+  [data-slot="input"],
+  [data-slot="textarea"],
+  [data-slot="select"],
+  select,
+  [role="button"],
+  a[class*="rounded-full"],
+  button[class*="rounded-full"] {
     min-height: 2.75rem;
+  }
+
+  [data-slot="button"],
+  [data-slot="select"],
+  select,
+  [role="button"] {
     min-width: 2.75rem;
   }
 
-  [data-slot="input"] {
+  /* Popup rows are tapped just like the trigger. */
+  [data-slot="select-popup"] [role="option"] {
     min-height: 2.75rem;
+  }
+
+  /* Footer and utility links sit in a row rather than a paragraph, so they can
+     take padding without disturbing surrounding text. Short labels such as
+     "Privacy" are naturally narrower than the target floor, so the row sets
+     both axes and centers the text in the resulting box. */
+  .touch-row a,
+  .touch-row button {
+    @apply inline-flex items-center justify-center;
+    min-height: 2.75rem;
+    min-width: 2.75rem;
   }
 }
 

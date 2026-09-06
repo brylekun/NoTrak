@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ScanSearch } from "lucide-react";
 
 import { toolIcons } from "@/lib/tools/icons";
 import type { ToolDefinition } from "@/lib/tools/registry";
 
 export function ToolCard({ tool, index }: { tool: ToolDefinition; index?: number }) {
-  const Icon = toolIcons[tool.icon];
+  // Keep the catalog usable if a development hot update briefly loads a new
+  // registry entry before its icon-map module has refreshed.
+  const Icon = toolIcons[tool.icon] ?? ScanSearch;
 
   return (
     <Link href={`/tools/${tool.slug}`} className="tool-card group">

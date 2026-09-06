@@ -5,11 +5,12 @@ import { Download, ImageDown, RotateCcw } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/ui/select";
 import { formatByteSize } from "@/lib/crypto/hash";
 import { outputImageName, processImage, validateImageFile, type SupportedImageType } from "@/lib/images/process";
 
 type Result = { url: string; name: string; size: number; width: number; height: number };
-const FORMATS: Array<{ type: SupportedImageType; label: string }> = [{ type: "image/jpeg", label: "JPEG" }, { type: "image/png", label: "PNG" }, { type: "image/webp", label: "WebP" }];
+const FORMATS: Array<{ value: SupportedImageType; label: string }> = [{ value: "image/jpeg", label: "JPEG" }, { value: "image/png", label: "PNG" }, { value: "image/webp", label: "WebP" }];
 
 export function ImageConverter() {
   const [file, setFile] = useState<File | null>(null);
@@ -38,7 +39,7 @@ export function ImageConverter() {
   return (
     <div>
       <label htmlFor="convert-image" className="text-sm font-semibold">Image to convert</label><Input id="convert-image" className="mt-2 h-11 cursor-pointer pt-2" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" onChange={(event) => { setFile(event.target.files?.[0] ?? null); clear(); }} /><p className="mt-2 text-xs text-muted-foreground">{file ? `${file.name} · ${formatByteSize(file.size)}` : "JPEG, PNG, or WebP up to 25 MB"}</p>
-      <div className="mt-5 grid gap-4 sm:grid-cols-2"><div><label htmlFor="convert-format" className="text-sm font-semibold">Output format</label><select id="convert-format" className="mt-2 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring" value={outputType} onChange={(event) => { setOutputType(event.target.value as SupportedImageType); clear(); }}>{FORMATS.map((format) => <option key={format.type} value={format.type}>{format.label}</option>)}</select></div><div><label htmlFor="convert-quality" className="text-sm font-semibold">Quality · {quality}%</label><input id="convert-quality" className="mt-3 w-full accent-primary" type="range" min="40" max="100" value={quality} disabled={outputType === "image/png"} onChange={(event) => { setQuality(Number(event.target.value)); clear(); }} /><p className="text-xs text-muted-foreground">{outputType === "image/png" ? "PNG uses lossless export." : "Higher quality usually means a larger file."}</p></div></div>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2"><SelectField id="convert-format" label="Output format" value={outputType} options={FORMATS} onValueChange={(value) => { setOutputType(value); clear(); }} /><div><label htmlFor="convert-quality" className="text-sm font-semibold">Quality · {quality}%</label><input id="convert-quality" className="mt-3 w-full accent-primary" type="range" min="40" max="100" value={quality} disabled={outputType === "image/png"} onChange={(event) => { setQuality(Number(event.target.value)); clear(); }} /><p className="text-xs text-muted-foreground">{outputType === "image/png" ? "PNG uses lossless export." : "Higher quality usually means a larger file."}</p></div></div>
       <div className="mt-5 flex flex-wrap gap-2"><Button className="h-10 px-4" onClick={convert} disabled={busy}><ImageDown />{busy ? "Converting…" : "Convert image"}</Button>{(file || result) && <Button className="h-10 px-4" variant="outline" onClick={reset}><RotateCcw />Reset</Button>}</div>
       {result && (
         <div className="result-enter mt-7 rounded-2xl border border-primary/20 bg-primary/6 p-5" aria-live="polite">

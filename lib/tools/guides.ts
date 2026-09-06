@@ -7,6 +7,13 @@ export type ToolGuide = {
 };
 
 export const toolGuides: Record<string, ToolGuide> = {
+  "audio-toolkit": {
+    summary: "Prepare audio you own for sharing, listening, or archiving without sending the recording to a conversion service.",
+    useCases: ["Trim a voice note, interview, music demo, or podcast excerpt.", "Convert audio to MP3, M4A, or WAV, normalize loudness, make it mono, adjust volume, or add clean fades."],
+    howItWorks: "A same-origin WebAssembly build of FFmpeg loads only when processing starts. It reads the selected file in browser memory, applies the chosen trim and filters, removes source metadata, and creates a new local download.",
+    limitations: "Local encoding is CPU- and memory-intensive and can be slow on phones. Inputs are limited to 75 MB and 30 minutes. Lossy MP3 and M4A conversion cannot restore missing detail, loudness normalization can change dynamics, and the visitor must own or have permission to process the audio.",
+    relatedSlugs: ["video-toolkit", "file-encryption", "hash-generator"],
+  },
   "video-toolkit": {
     summary: "Prepare a video you own for sharing without sending the source to a conversion service or connecting a social-media account.",
     useCases: ["Trim and resize a short clip for a landscape, square, portrait, or vertical post.", "Compress a video, remove or adjust its audio, or capture the current preview frame as a thumbnail."],
@@ -153,6 +160,13 @@ export const toolGuides: Record<string, ToolGuide> = {
     howItWorks: "A browser worker reads the chosen files, copies the selected pages into new PDF documents, and prepares local downloads.",
     limitations: "Password-protected files may not open, and page copying may not preserve signatures, bookmarks, forms, layers, or attachments.",
     relatedSlugs: ["pdf-metadata-cleaner", "file-encryption", "sensitive-data-redactor"],
+  },
+  "document-scanner": {
+    summary: "Combine photos of paper documents into one tidy PDF while keeping the originals, recognized text, and finished file on your device.",
+    useCases: ["Turn photographed receipts, notes, forms, or handouts into one ordered document.", "Create an A4 or Letter PDF with optional searchable English text before sharing or archiving it."],
+    howItWorks: "The browser decodes each selected image, applies your rotation and color treatment, and re-encodes it to remove common camera metadata. A local worker builds the PDF. Optional printed-English recognition uses NoTrak's bundled OCR engine and adds an invisible search layer.",
+    limitations: "This version does not automatically detect page edges or correct perspective. OCR can misread handwriting, blur, columns, or unusual fonts, and its invisible text does not reproduce the visual layout. Review the downloaded PDF before relying on it.",
+    relatedSlugs: ["image-to-text", "pdf-toolkit", "pdf-metadata-cleaner"],
   },
   "phishing-checker": {
     summary: "Inspect a suspicious URL without opening it, combining explainable local signals with configured reputation providers.",

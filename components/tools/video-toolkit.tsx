@@ -6,6 +6,7 @@ import { Download, Film, ImageDown, RotateCcw, Scissors, Volume2, VolumeX, X } f
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectField } from "@/components/ui/select";
 import { formatByteSize } from "@/lib/crypto/hash";
 import {
   buildVideoCommand,
@@ -28,7 +29,6 @@ import {
 } from "@/lib/video/toolkit";
 
 type VideoResult = { url: string; name: string; size: number };
-const selectClass = "mt-2 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm";
 
 const defaultSettings = (duration: number): VideoSettings => ({
   start: 0,
@@ -247,9 +247,40 @@ export function VideoToolkit() {
       <section className="mt-7 border-t border-border/70 pt-6" aria-labelledby="format-heading">
         <h2 id="format-heading" className="flex items-center gap-2 text-lg font-semibold"><Film className="size-5" />Size and compression</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <label className="text-sm font-semibold">Aspect ratio<select aria-label="Aspect ratio" className={selectClass} value={settings.aspect} disabled={busy} onChange={(e) => updateSettings({ aspect: e.target.value as VideoAspect })}><option value="original">Original</option><option value="16:9">Landscape 16:9</option><option value="1:1">Square 1:1</option><option value="4:5">Portrait 4:5</option><option value="9:16">Vertical 9:16</option></select></label>
-          <label className="text-sm font-semibold">Resolution<select aria-label="Resolution" className={selectClass} value={settings.resolution} disabled={busy} onChange={(e) => updateSettings({ resolution: Number(e.target.value) as VideoResolution })}><option value="720">720p</option><option value="1080">1080p</option></select></label>
-          <label className="text-sm font-semibold">Quality<select aria-label="Quality" className={selectClass} value={settings.quality} disabled={busy} onChange={(e) => updateSettings({ quality: e.target.value as VideoQuality })}><option value="high">High</option><option value="balanced">Balanced</option><option value="small">Smaller file</option></select></label>
+          <SelectField
+            label="Aspect ratio"
+            value={settings.aspect}
+            disabled={busy}
+            options={[
+              { value: "original", label: "Original" },
+              { value: "16:9", label: "Landscape 16:9" },
+              { value: "1:1", label: "Square 1:1" },
+              { value: "4:5", label: "Portrait 4:5" },
+              { value: "9:16", label: "Vertical 9:16" },
+            ]}
+            onValueChange={(aspect) => updateSettings({ aspect: aspect as VideoAspect })}
+          />
+          <SelectField
+            label="Resolution"
+            value={settings.resolution}
+            disabled={busy}
+            options={[
+              { value: 720, label: "720p" },
+              { value: 1080, label: "1080p" },
+            ]}
+            onValueChange={(resolution) => updateSettings({ resolution: resolution as VideoResolution })}
+          />
+          <SelectField
+            label="Quality"
+            value={settings.quality}
+            disabled={busy}
+            options={[
+              { value: "high", label: "High" },
+              { value: "balanced", label: "Balanced" },
+              { value: "small", label: "Smaller file" },
+            ]}
+            onValueChange={(quality) => updateSettings({ quality: quality as VideoQuality })}
+          />
         </div>
         {validated && <p className="mt-4 text-sm text-muted-foreground">Output: {validated.dimensions.width} × {validated.dimensions.height} · {formatDuration(validated.duration)} · approximately {formatByteSize(estimated)}</p>}
         <p className="mt-1 text-xs leading-5 text-muted-foreground">The size estimate is only a planning guide; video complexity and source encoding can change the final result.</p>
