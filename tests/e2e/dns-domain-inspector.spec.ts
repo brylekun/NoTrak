@@ -2,9 +2,10 @@ import { expect, test } from "@playwright/test";
 
 test("DNS inspector keeps URL details local and sends only a confirmed DNS query", async ({ page }) => {
   const lookups: Array<{ method: string; url: string; accept: string | undefined; body: string | null }> = [];
-  // Context routing with an origin/path predicate is reliable across all three
-  // Playwright engines. WebKit can bypass a page-level glob for a cross-origin
-  // request, which would make this test depend on the resolver's live answer.
+  // Playwright cannot route requests owned by a service worker. WebKit can
+  // activate NoTrak's worker before this fetch, so keep this request observable
+  // using the same service-worker boundary as the provider tests below.
+  await page.route("**/sw.js", (route) => route.abort());
   await page.context().route((url) => url.origin === "https://cloudflare-dns.com" && url.pathname === "/dns-query", async (route) => {
     const request = route.request();
     lookups.push({
